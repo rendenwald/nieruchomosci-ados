@@ -19,6 +19,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine as _create_async_engine,
 )
 
+from scraper_base.db_utils import check_connection
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/realestate"
@@ -97,26 +99,6 @@ async def get_db_session(
     """
     async with session_factory() as session:
         yield session
-
-
-async def check_connection(engine: AsyncEngine) -> bool:
-    """Perform a lightweight health check against the database.
-
-    Args:
-        engine: An ``AsyncEngine`` instance.
-
-    Returns:
-        ``True`` if the database responds, ``False`` otherwise.
-
-    """
-    try:
-        async with engine.connect() as conn:
-            await conn.execute(__import__("sqlalchemy").text("SELECT 1"))
-        return True
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Database health check failed", extra={"error": str(exc)})
-        return False
-
 
 async def init_db(engine: AsyncEngine) -> None:
     """Create all tables defined on ``Base.metadata``.

@@ -4,11 +4,11 @@ from sqlalchemy import text as sa_text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from scraper_base.database import (
-    check_connection,
     create_async_engine,
     create_session_factory,
     get_database_url,
 )
+from scraper_base.db_utils import check_connection
 
 
 class TestCreateAsyncEngine:
