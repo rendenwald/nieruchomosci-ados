@@ -1,4 +1,5 @@
 .ai/local/
+tmp/
 
 # Environment (secrets)
 .env

@@ -5,13 +5,16 @@ Provides ``MinioStorageClient`` with SHA256-based object naming and graceful
 degradation when MinIO is unavailable.
 """
 
+import asyncio
 import hashlib
-import logging
+import io
 import os
+from datetime import timedelta
 
+import structlog
 from minio import Minio
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 # Hard cap enforced before upload (per 070-DATABASE.md FIX-10)
 MAX_PHOTOS_PER_PROPERTY: int = 20
@@ -85,17 +88,19 @@ class MinioStorageClient:
         if client is None:
             return False
         try:
-            if not client.bucket_exists(target_bucket):
-                client.make_bucket(target_bucket)
-                logger.info("Created MinIO bucket", extra={"bucket": target_bucket})
+            exists = await asyncio.to_thread(client.bucket_exists, target_bucket)
+            if not exists:
+                await asyncio.to_thread(client.make_bucket, target_bucket)
+                logger.info("Created MinIO bucket", bucket=target_bucket)
             else:
-                logger.debug("MinIO bucket exists", extra={"bucket": target_bucket})
+                logger.debug("MinIO bucket exists", bucket=target_bucket)
             self._available = True
             return True
         except Exception as exc:
             logger.warning(
                 "MinIO bucket operation failed",
-                extra={"bucket": target_bucket, "error": str(exc)},
+                bucket=target_bucket,
+                error=str(exc),
             )
             self._available = False
             return False
@@ -138,22 +143,25 @@ class MinioStorageClient:
             return None
 
         try:
-            client.put_object(
+            await asyncio.to_thread(
+                client.put_object,
                 bucket_name=self._bucket,
                 object_name=object_name,
-                data=__import__("io").BytesIO(data),
+                data=io.BytesIO(data),
                 length=len(data),
                 content_type=content_type,
             )
             logger.info(
                 "Photo uploaded",
-                extra={"object_name": object_name, "size_bytes": len(data)},
+                object_name=object_name,
+                size_bytes=len(data),
             )
             return object_name
         except Exception as exc:
             logger.warning(
                 "Photo upload failed",
-                extra={"object_name": object_name, "error": str(exc)},
+                object_name=object_name,
+                error=str(exc),
             )
             return None
 
@@ -180,16 +188,18 @@ class MinioStorageClient:
         if client is None:
             return None
         try:
-            url = client.presigned_get_object(
+            url = await asyncio.to_thread(
+                client.presigned_get_object,
                 bucket_name=self._bucket,
                 object_name=object_name,
-                expires=__import__("datetime").timedelta(seconds=expires_seconds),
+                expires=timedelta(seconds=expires_seconds),
             )
             return str(url)
         except Exception as exc:
             logger.warning(
                 "Failed to generate presigned URL",
-                extra={"object_name": object_name, "error": str(exc)},
+                object_name=object_name,
+                error=str(exc),
             )
             return None
 
@@ -211,7 +221,7 @@ class MinioStorageClient:
             except Exception as exc:  # noqa: BLE001
                 logger.warning(
                     "MinIO client creation failed",
-                    extra={"error": str(exc)},
+                    error=str(exc),
                 )
                 self._available = False
         self._initialised = True

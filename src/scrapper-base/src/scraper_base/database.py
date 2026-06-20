@@ -6,9 +6,9 @@ with retry logic on connection failure.
 """
 
 import asyncio
-import logging
 import os
 
+import structlog
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import (
 
 from scraper_base.db_utils import check_connection
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 DEFAULT_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/realestate"
 MAX_RETRIES = 3
@@ -50,7 +50,7 @@ def create_async_engine(
 
     """
     url = database_url or get_database_url()
-    logger.info("Creating async engine", extra={"pool_size": pool_size})
+    logger.info("Creating async engine", pool_size=pool_size)
 
     # SQLite does not support pool_size / max_overflow
     extra: dict[str, object] = dict(**kwargs)
@@ -124,7 +124,9 @@ async def wait_for_db(
             delay = delays[min(attempt - 1, len(delays) - 1)]
             logger.warning(
                 "Database not ready, retrying",
-                extra={"attempt": attempt, "max_retries": max_retries, "retry_delay_s": delay},
+                attempt=attempt,
+                max_retries=max_retries,
+                retry_delay_s=delay,
             )
             await asyncio.sleep(delay)
     msg = f"Database unreachable after {max_retries} retries"

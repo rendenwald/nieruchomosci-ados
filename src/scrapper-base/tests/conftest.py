@@ -148,6 +148,7 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
 # ---------------------------------------------------------------------------
 
 SAMPLE_PROPERTY = {
+    "id": 1,
     "portal_source": "otodom",
     "source_id": "OTODOM-12345",
     "source_url": "https://www.otodom.pl/...",

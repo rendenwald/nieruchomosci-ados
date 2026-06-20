@@ -4,12 +4,14 @@ Database utility helpers.
 Provides convenience functions for initialisation and health-checking.
 """
 
-import logging
-
-from sqlalchemy import text
+import structlog
+from sqlalchemy import func as sa_func
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-logger = logging.getLogger(__name__)
+from scraper_base.models import Property
+
+logger = structlog.get_logger(__name__)
 
 
 async def check_connection(engine: AsyncEngine) -> bool:
@@ -26,15 +28,13 @@ async def check_connection(engine: AsyncEngine) -> bool:
             await conn.execute(text("SELECT 1"))
         return True
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Database health check failed", extra={"error": str(exc)})
+        logger.warning("Database health check failed", error=str(exc))
         return False
 
 
 async def property_count(session: AsyncSession, portal: str | None = None) -> int:
     """Return the total number of properties, optionally filtered by portal."""
-    from scraper_base.models import Property  # noqa: PLC0415
-
-    stmt = __import__("sqlalchemy").select(__import__("sqlalchemy").func.count(Property.id))
+    stmt = select(sa_func.count(Property.id))
     if portal:
         stmt = stmt.where(Property.portal_source == portal)
     result = await session.execute(stmt)

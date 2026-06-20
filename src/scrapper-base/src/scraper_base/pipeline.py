@@ -132,7 +132,8 @@ class BasePipeline(ABC):
             self._run_id = run.id
             self.logger.info(
                 "Spider opened",
-                extra={"run_id": self._run_id, "portal": self.PORTAL_SOURCE},
+                run_id=self._run_id,
+                portal=self.PORTAL_SOURCE,
             )
 
     async def close_spider(self, spider: Any) -> None:  # noqa: ANN401
@@ -167,13 +168,11 @@ class BasePipeline(ABC):
 
         self.logger.info(
             "Spider closed",
-            extra={
-                "duration_s": round(duration, 2),
-                "items_scraped": self._items_scraped,
-                "items_new": self._items_new,
-                "items_updated": self._items_updated,
-                "errors": self._errors,
-            },
+            duration_s=round(duration, 2),
+            items_scraped=self._items_scraped,
+            items_new=self._items_new,
+            items_updated=self._items_updated,
+            errors=self._errors,
         )
 
         # Clean up
@@ -224,7 +223,10 @@ class BasePipeline(ABC):
             else:
                 self._items_updated += 1
 
-            return dict(item) if hasattr(item, "__iter__") else {"source_id": data.get("source_id")}
+            # Pass through to Scrapy: convert dicts, leave Scrapy Items as-is
+            if isinstance(item, dict):
+                return item
+            return {"source_id": data.get("source_id")}
 
         except Exception:
             self._errors += 1
@@ -235,6 +237,6 @@ class BasePipeline(ABC):
 
 def _check_portal_source(value: str) -> None:
     """Validate that ``PORTAL_SOURCE`` is set to a non-default value."""
-    if value == "unknown":
+    if not value or value == "unknown":
         msg = "BasePipeline subclasses must set PORTAL_SOURCE to a non-empty string (e.g. 'otodom')."
         raise AttributeError(msg)

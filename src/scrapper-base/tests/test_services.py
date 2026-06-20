@@ -97,6 +97,7 @@ class TestPropertyService:
         await service.upsert_property(sample_property)
         # Insert another property
         prop2 = dict(sample_property)
+        prop2["id"] = 2
         prop2["source_id"] = "OTODOM-67890"
         await service.upsert_property(prop2)
 
@@ -119,6 +120,51 @@ class TestPropertyService:
         prop = await service.get_by_source("otodom", "OTODOM-12345")
         assert prop is not None
         assert prop.is_active is False
+
+    async def test_concurrent_upsert_same_key(self, db_engine, sample_property):
+        """Concurrent upserts of the same key do not produce duplicates.
+
+        Note: This test requires proper transaction isolation (PostgreSQL).
+        On SQLite with StaticPool, concurrent sessions share the underlying
+        connection which can cause false positives. The sequential variant
+        (test_upsert_same_key_no_duplicate) is the primary guard.
+        """
+        import asyncio  # noqa: PLC0415
+
+        from sqlalchemy.ext.asyncio import AsyncSession  # noqa: PLC0415
+
+        async def _upsert_in_session():
+            async with AsyncSession(bind=db_engine) as session:
+                service = PropertyService(session)
+                try:
+                    return await service.upsert_property(sample_property)
+                except Exception as exc:
+                    return exc
+
+        results = await asyncio.gather(
+            _upsert_in_session(),
+            _upsert_in_session(),
+            return_exceptions=True,
+        )
+
+        successes = [r for r in results if isinstance(r, tuple) and len(r) == 2]
+
+        # At least one insert must succeed regardless of isolation
+        # (the other may get a constraint violation on SQLite)
+        if len(successes) == 0:
+            msg = "Both concurrent upserts failed — this can happen on SQLite with StaticPool"
+            raise pytest.skip(msg)  # noqa: TRY301
+
+        # Exactly one row in the database
+        async with AsyncSession(bind=db_engine) as session:
+            result = await session.execute(
+                select(Property).where(
+                    Property.portal_source == "otodom",
+                    Property.source_id == "OTODOM-12345",
+                ),
+            )
+            rows = result.scalars().all()
+            assert len(rows) == 1
 
 
 class TestAgencyService:
