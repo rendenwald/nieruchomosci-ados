@@ -213,4 +213,5 @@ Before marking *any* task complete:
 | North Star | `doc/overview/01-north-star.md` | Product vision & strategy |
 | Architecture | `doc/overview/02-architecture.md` | System architecture |
 | Backlog | `doc/planning/backlog.md` | Priority-ordered work items |
+| Developer Setup | `doc/guides/developer-setup.md` | Tool installation & dev environment |
 | Documentation Handbook | `doc/documentation-handbook.md` | Doc structure & conventions |
