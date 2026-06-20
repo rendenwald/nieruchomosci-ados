@@ -50,13 +50,18 @@ def create_async_engine(
     """
     url = database_url or get_database_url()
     logger.info("Creating async engine", extra={"pool_size": pool_size})
+
+    # SQLite does not support pool_size / max_overflow
+    extra: dict[str, object] = dict(**kwargs)
+    if "sqlite" not in url:
+        extra["pool_size"] = pool_size
+        extra["max_overflow"] = 2
+        extra["pool_pre_ping"] = True
+
     return _create_async_engine(
         url,
-        pool_size=pool_size,
-        max_overflow=2,
-        pool_pre_ping=True,
         echo=os.environ.get("SQL_ECHO", "0").lower() in ("1", "true", "yes"),
-        **kwargs,
+        **extra,
     )
 
 

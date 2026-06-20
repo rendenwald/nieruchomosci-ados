@@ -8,7 +8,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func as sa_func
 from sqlalchemy import select
 from sqlalchemy import update as sa_update
@@ -65,6 +65,7 @@ class PropertyCreate(BaseModel):
     localization: dict[str, Any] | None = None
     building: dict[str, Any] | None = None
     source_created_at: datetime | None = None
+    is_active: bool = True
 
     @field_validator("photos", mode="before")
     @classmethod
@@ -78,8 +79,7 @@ class PropertyCreate(BaseModel):
             return [v]
         return v
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
 
 class PropertyUpdate(BaseModel):
@@ -121,8 +121,7 @@ class PropertyUpdate(BaseModel):
     is_active: bool | None = None
     source_created_at: datetime | None = None
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
 
 class AgencyCreate(BaseModel):
@@ -139,8 +138,7 @@ class AgencyCreate(BaseModel):
     subscription_tier: str | None = Field(None, max_length=50)
     subscription_expires: datetime | None = None
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
 
 # ---------------------------------------------------------------------------
@@ -204,6 +202,17 @@ class PropertyService:
         property_data = validated.model_dump(exclude_none=True)
         property_data["scraped_at"] = now
         property_data["last_seen_at"] = now
+
+        # Generate an auto-incrementing ID for the portal.
+        # On PostgreSQL this could use a sequence; here we use
+        # max(id) + 1 for cross-DB compatibility.
+        if "id" not in property_data:
+            max_id_stmt = select(
+                sa_func.coalesce(sa_func.max(Property.id), 0) + 1,
+            ).where(Property.portal_source == validated.portal_source)
+            next_id = await self.session.scalar(max_id_stmt)
+            property_data["id"] = next_id
+
         new_property = Property(**property_data)
         self.session.add(new_property)
         await self.session.flush()
@@ -440,7 +449,11 @@ class ScraperRunService:
         run.listings_updated = listings_updated
         run.errors_count = errors_count
         run.error_message = error_message
-        run.duration_seconds = (now - run.started_at).total_seconds()
+        # Handle offset-aware vs offset-naive (e.g. SQLite) comparison
+        if run.started_at.tzinfo is not None:
+            run.duration_seconds = (now - run.started_at).total_seconds()
+        else:
+            run.duration_seconds = (now.replace(tzinfo=None) - run.started_at).total_seconds()
 
         if error_message:
             run.status = ScraperRunStatus.FAILED

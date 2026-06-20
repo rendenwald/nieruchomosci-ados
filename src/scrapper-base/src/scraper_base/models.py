@@ -57,7 +57,7 @@ class Property(Base):
         },
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
     portal_source: Mapped[str] = mapped_column(String(50), primary_key=True, nullable=False)
     source_id: Mapped[str] = mapped_column(String(255), nullable=False)
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)

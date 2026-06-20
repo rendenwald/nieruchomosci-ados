@@ -4,16 +4,17 @@ Revision ID: 0001
 Revises:
 Create Date: 2026-06-20
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
+
+import geoalchemy2  # noqa: F401  # Required for Geometry type
+import sqlalchemy as sa
 
 from alembic import op
-import sqlalchemy as sa
-import geoalchemy2  # noqa: F401  # Required for Geometry type
 
 revision: str = "0001"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -140,7 +141,10 @@ def upgrade() -> None:
         sa.Column("postal_code", sa.String(20), nullable=True),
         sa.Column("subscription_tier", sa.String(50), nullable=True),
         sa.Column("subscription_expires", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True),
+            server_default=sa.func.now(), nullable=False,
+        ),
     )
     op.create_unique_constraint("uq_agencies_source", "agencies", ["portal_source", "source_id"])
 
@@ -152,7 +156,10 @@ def upgrade() -> None:
         sa.Column("id", sa.String(36), primary_key=True),
         sa.Column("portal_source", sa.String(50), nullable=False),
         sa.Column("scraper_id", sa.String(255), nullable=True),
-        sa.Column("started_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "started_at", sa.DateTime(timezone=True),
+            server_default=sa.func.now(), nullable=False,
+        ),
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("listings_scraped", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("listings_new", sa.Integer(), nullable=False, server_default="0"),

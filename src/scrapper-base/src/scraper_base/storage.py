@@ -10,7 +10,6 @@ import logging
 import os
 
 from minio import Minio
-from minio.error import S3Error
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +84,7 @@ class MinioStorageClient:
                 logger.debug("MinIO bucket exists", extra={"bucket": target_bucket})
             self._available = True
             return True
-        except S3Error as exc:
+        except Exception as exc:
             logger.warning(
                 "MinIO bucket operation failed",
                 extra={"bucket": target_bucket, "error": str(exc)},
@@ -143,7 +142,7 @@ class MinioStorageClient:
                 extra={"object_name": object_name, "size_bytes": len(data)},
             )
             return object_name
-        except S3Error as exc:
+        except Exception as exc:
             logger.warning(
                 "Photo upload failed",
                 extra={"object_name": object_name, "error": str(exc)},
@@ -179,7 +178,7 @@ class MinioStorageClient:
                 expires=__import__("datetime").timedelta(seconds=expires_seconds),
             )
             return str(url)
-        except S3Error as exc:
+        except Exception as exc:
             logger.warning(
                 "Failed to generate presigned URL",
                 extra={"object_name": object_name, "error": str(exc)},

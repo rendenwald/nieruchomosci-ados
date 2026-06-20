@@ -32,6 +32,7 @@ dev = [
     "pytest-cov>=5.0,<6.0",
     "ruff>=0.5,<1.0",
     "mypy>=1.10,<2.0",
+    "aiosqlite>=0.20,<1.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -51,4 +52,5 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_test_loop_scope = "function"
 testpaths = ["tests"]
