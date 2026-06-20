@@ -496,7 +496,7 @@ This plan delivers the `src/scrapper-base/` Python package as specified in `chg-
 |-------|--------|---------|-----------|--------|-------|
 | Phase 1: Package Scaffold | completed | 2026-06-20 | 2026-06-20 | — | Package installed via uv, import verified |
 | Phase 2: Database Layer | completed | 2026-06-20 | 2026-06-20 | — | ruff/mypy clean, imports verified |
-| Phase 3: Services Layer | pending | — | — | — | — |
+| Phase 3: Services Layer | completed | 2026-06-20 | 2026-06-20 | — | PropertyService, AgencyService, ScraperRunService, Pydantic validation |
 | Phase 4: Cross-Cutting | pending | — | — | — | — |
 | Phase 5: Tests & Verification | pending | — | — | — | — |
 | Phase 6: Manual Smoke Test | pending | — | — | — | — |
