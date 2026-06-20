@@ -4,6 +4,7 @@ Revision ID: 0001
 Revises:
 Create Date: 2026-06-20
 """
+
 from collections.abc import Sequence
 
 import geoalchemy2  # noqa: F401  # Required for Geometry type
@@ -96,8 +97,7 @@ def upgrade() -> None:
     op.execute("CREATE TABLE properties_otodom PARTITION OF properties FOR VALUES IN ('otodom')")
     op.execute("CREATE TABLE properties_gratka PARTITION OF properties FOR VALUES IN ('gratka')")
     op.execute(
-        "CREATE TABLE properties_nieruchomosci_online PARTITION OF properties "
-        "FOR VALUES IN ('nieruchomosci-online')"
+        "CREATE TABLE properties_nieruchomosci_online PARTITION OF properties FOR VALUES IN ('nieruchomosci-online')"
     )
     op.execute("CREATE TABLE properties_other PARTITION OF properties DEFAULT")
 
@@ -142,8 +142,10 @@ def upgrade() -> None:
         sa.Column("subscription_tier", sa.String(50), nullable=True),
         sa.Column("subscription_expires", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True),
-            server_default=sa.func.now(), nullable=False,
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
         ),
     )
     op.create_unique_constraint("uq_agencies_source", "agencies", ["portal_source", "source_id"])
@@ -157,8 +159,10 @@ def upgrade() -> None:
         sa.Column("portal_source", sa.String(50), nullable=False),
         sa.Column("scraper_id", sa.String(255), nullable=True),
         sa.Column(
-            "started_at", sa.DateTime(timezone=True),
-            server_default=sa.func.now(), nullable=False,
+            "started_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
         ),
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("listings_scraped", sa.Integer(), nullable=False, server_default="0"),

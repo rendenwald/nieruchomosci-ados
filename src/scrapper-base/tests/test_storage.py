@@ -1,7 +1,5 @@
 """Tests for MinIO storage client."""
 
-
-
 from scraper_base.storage import MAX_PHOTOS_PER_PROPERTY, MinioStorageClient
 
 

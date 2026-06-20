@@ -42,6 +42,7 @@ def _utcnow() -> datetime:
 # Property
 # ---------------------------------------------------------------------------
 
+
 class Property(Base):
     """A real estate listing scraped from a portal.
 
@@ -73,7 +74,8 @@ class Property(Base):
     # Promotion
     is_promoted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     promotion_expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True,
+        DateTime(timezone=True),
+        nullable=True,
     )
 
     # Pricing
@@ -101,7 +103,8 @@ class Property(Base):
     latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     location: Mapped[object | None] = mapped_column(
-        geoalchemy2.Geometry("POINT", srid=4326), nullable=True,  # type: ignore[arg-type]
+        geoalchemy2.Geometry("POINT", srid=4326),
+        nullable=True,  # type: ignore[arg-type]
     )
 
     # Agency
@@ -119,14 +122,19 @@ class Property(Base):
 
     # Timestamps
     scraped_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False,
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
     )
     last_seen_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False,
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     source_created_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True,
+        DateTime(timezone=True),
+        nullable=True,
     )
 
     def __repr__(self) -> str:
@@ -155,13 +163,12 @@ idx_properties_location = Index(
 # Agency
 # ---------------------------------------------------------------------------
 
+
 class Agency(Base):
     """A real estate agency or property owner."""
 
     __tablename__ = "agencies"
-    __table_args__ = (
-        UniqueConstraint("portal_source", "source_id", name="uq_agencies_source"),
-    )
+    __table_args__ = (UniqueConstraint("portal_source", "source_id", name="uq_agencies_source"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     portal_source: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -174,10 +181,13 @@ class Agency(Base):
     postal_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
     subscription_tier: Mapped[str | None] = mapped_column(String(50), nullable=True)
     subscription_expires: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True,
+        DateTime(timezone=True),
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False,
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
     )
 
     properties: Mapped[list["Property"]] = relationship(  # noqa: F811
@@ -195,6 +205,7 @@ class Agency(Base):
 # ScraperRun
 # ---------------------------------------------------------------------------
 
+
 class ScraperRunStatus(StrEnum):
     """Status values for a scraper run."""
 
@@ -209,12 +220,16 @@ class ScraperRun(Base):
     __tablename__ = "scraper_runs"
 
     id: Mapped[str] = mapped_column(
-        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4()),
+        UUID(as_uuid=False),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
     )
     portal_source: Mapped[str] = mapped_column(String(50), nullable=False)
     scraper_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False,
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
     )
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     listings_scraped: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -223,7 +238,9 @@ class ScraperRun(Base):
     errors_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     duration_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
     status: Mapped[str] = mapped_column(
-        String(20), default=ScraperRunStatus.RUNNING.value, nullable=False,
+        String(20),
+        default=ScraperRunStatus.RUNNING.value,
+        nullable=False,
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 

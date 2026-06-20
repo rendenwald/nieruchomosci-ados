@@ -6,6 +6,10 @@
 #   docker compose down -v                  # Stop + delete volumes (reset data)
 #   docker compose logs -f <service>        # Tail logs for a service
 #
+# Configuration:
+#   Copy .env.example → .env and adjust values.
+#   Credentials are read from .env (git-ignored).
+#
 # Services:
 #   postgres — PostgreSQL 16 + PostGIS (port 5432)
 #   redis    — Redis 7 cache (port 6379)
@@ -20,16 +24,16 @@ services:
     container_name: realestate-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      POSTGRES_DB: realestate
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-realestate}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d realestate"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-realestate}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -42,11 +46,11 @@ services:
     container_name: realestate-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     command:
       - redis-server
-      - --maxmemory 1gb
-      - --maxmemory-policy allkeys-lru
+      - --maxmemory ${REDIS_MAXMEMORY:-1gb}
+      - --maxmemory-policy ${REDIS_MAXMEMORY_POLICY:-allkeys-lru}
       - --save ""
       - --appendonly no
     volumes:
@@ -64,12 +68,12 @@ services:
     container_name: realestate-minio
     restart: unless-stopped
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":${MINIO_CONSOLE_PORT:-9001}"
     volumes:
       - minio_data:/data
     healthcheck:

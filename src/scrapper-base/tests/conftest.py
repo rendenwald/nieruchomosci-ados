@@ -226,9 +226,7 @@ class MockMinioClient:
         object_name: str,
         expires_seconds: int = 3600,
     ) -> str | None:
-        return (
-            f"http://minio-test.local/{object_name}?expires={expires_seconds}"
-        )
+        return f"http://minio-test.local/{object_name}?expires={expires_seconds}"
 
 
 @pytest.fixture

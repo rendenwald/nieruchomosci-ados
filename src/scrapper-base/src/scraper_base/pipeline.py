@@ -125,7 +125,6 @@ class BasePipeline(ABC):
         )
 
         if self._run_service:
-
             run = await self._run_service.create_run(
                 portal_source=self.PORTAL_SOURCE,
                 scraper_id=str(id(self)),
@@ -237,8 +236,5 @@ class BasePipeline(ABC):
 def _check_portal_source(value: str) -> None:
     """Validate that ``PORTAL_SOURCE`` is set to a non-default value."""
     if value == "unknown":
-        msg = (
-            "BasePipeline subclasses must set PORTAL_SOURCE to a "
-            "non-empty string (e.g. 'otodom')."
-        )
+        msg = "BasePipeline subclasses must set PORTAL_SOURCE to a non-empty string (e.g. 'otodom')."
         raise AttributeError(msg)

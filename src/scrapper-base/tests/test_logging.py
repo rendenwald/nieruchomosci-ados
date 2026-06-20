@@ -52,7 +52,6 @@ class TestLoggingConfig:
             cache_logger_on_first_use=False,
         )
 
-
         logger = get_logger(portal="test", scraper_id="s1", run_id="r1")
 
         # This should work without errors

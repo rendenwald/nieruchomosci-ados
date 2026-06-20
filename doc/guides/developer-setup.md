@@ -176,11 +176,11 @@ docker compose down -v
 
 **Services:**
 
-| Service | Image | Ports | Credentials |
-|---------|-------|-------|-------------|
-| postgres | `postgis/postgis:16-3.4` | `5432` | `postgres` / `postgres` / DB: `realestate` |
-| redis | `redis:7-alpine` | `6379` | None (no auth) |
-| minio | `minio/minio` | `9000` (API), `9001` (Console) | `minioadmin` / `minioadmin` |
+| Service | Image | Ports | Credentials (from `.env`) |
+|---------|-------|-------|---------------------------|
+| postgres | `postgis/postgis:16-3.4` | `${POSTGRES_PORT:-5432}` | `${POSTGRES_USER}` / `${POSTGRES_PASSWORD}` |
+| redis | `redis:7-alpine` | `${REDIS_PORT:-6379}` | None (no auth) |
+| minio | `minio/minio` | `${MINIO_API_PORT:-9000}` / `${MINIO_CONSOLE_PORT:-9001}` | `${MINIO_ROOT_USER}` / `${MINIO_ROOT_PASSWORD}` |
 
 ---
 
@@ -304,26 +304,27 @@ docker compose exec minio mc ready local
 
 ## 11. Environment Variables
 
-Create a `.env` file in the project root (values match `docker-compose.yml` defaults):
+All credentials and configuration live in a `.env` file (git-ignored). Copy the template and adjust:
 
 ```bash
-# Database
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/realestate
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# MinIO
-MINIO_ENDPOINT=localhost:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET=property-photos
-
-# GitHub (for PR operations)
-GH_TOKEN=ghp_...
+cp .env.example .env
 ```
 
-> **Never commit `.env` to git.** Add it to `.gitignore` if not already there.
+Then edit `.env` to match your environment. Default values in `.env.example` work with the Docker Compose stack out of the box.
+
+**Key variables:**
+
+| Variable | Default (Docker) | Purpose |
+|----------|------------------|---------|
+| `DATABASE_URL` | `postgresql+asyncpg://postgres:postgres@localhost:5432/realestate` | Async DB connection |
+| `REDIS_URL` | `redis://localhost:6379/0` | Cache connection |
+| `MINIO_ENDPOINT` | `localhost:9000` | MinIO API endpoint |
+| `MINIO_ACCESS_KEY` | `minioadmin` | MinIO access key |
+| `MINIO_SECRET_KEY` | `minioadmin` | MinIO secret key |
+| `MINIO_BUCKET` | `property-photos` | Photo storage bucket |
+
+> **⚠️ Never commit `.env` to git.** It's already in `.gitignore`.
+> Use `.env.example` as the template for required variables.
 
 ---
 
