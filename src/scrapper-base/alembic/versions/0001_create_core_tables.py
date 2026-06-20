@@ -68,7 +68,7 @@ def upgrade() -> None:
             street          VARCHAR(255),
             latitude        FLOAT,
             longitude       FLOAT,
-            location        GEOGRAPHY(Point, 4326),
+            location        GEOMETRY(Point, 4326),
 
             -- Agency
             agency_name         VARCHAR(255),
@@ -93,7 +93,10 @@ def upgrade() -> None:
         ) PARTITION BY LIST (portal_source)
     """)
 
-    # Create partitions for known portal sources
+    # Create partitions for known portal sources.
+    # When adding a new portal source:
+    #   1. Add a new PARTITION ... FOR VALUES IN ('<new-portal>') here
+    #   2. Or ensure the 'other' default partition catches it (for dynamic sources)
     op.execute("CREATE TABLE properties_otodom PARTITION OF properties FOR VALUES IN ('otodom')")
     op.execute("CREATE TABLE properties_gratka PARTITION OF properties FOR VALUES IN ('gratka')")
     op.execute(

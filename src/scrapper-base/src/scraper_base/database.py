@@ -8,7 +8,6 @@ with retry logic on connection failure.
 import asyncio
 import logging
 import os
-from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -83,22 +82,6 @@ def create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSessi
         expire_on_commit=False,
     )
 
-
-async def get_db_session(
-    session_factory: async_sessionmaker[AsyncSession],
-) -> AsyncGenerator[AsyncSession, None]:
-    """Yield an ``AsyncSession`` as an async context manager.
-
-    Usage::
-
-        async for session in get_db_session(session_factory):
-            await session.execute(...)
-
-    The session is automatically closed after the ``for`` block exits.
-
-    """
-    async with session_factory() as session:
-        yield session
 
 async def init_db(engine: AsyncEngine) -> None:
     """Create all tables defined on ``Base.metadata``.

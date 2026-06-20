@@ -7,6 +7,7 @@ metrics auto-emission, structured logging, and MinIO storage.
 """
 
 import time
+import uuid
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -56,9 +57,10 @@ class BasePipeline(ABC):
         self._start_time: float = 0.0
 
         # Logger with consistent fields
+        self._scraper_id = str(uuid.uuid4())
         self.logger = get_logger(
             portal=self.PORTAL_SOURCE,
-            scraper_id=str(id(self)),
+            scraper_id=self._scraper_id,
             run_id="pending",
         )
 
@@ -104,7 +106,7 @@ class BasePipeline(ABC):
         db_url = get_database_url()
         self._db_engine = create_async_engine(db_url, pool_size=5)
         self._session_factory = create_session_factory(self._db_engine)
-        self._session = __import__("sqlalchemy").ext.asyncio.AsyncSession(self._db_engine)  # noqa: SIM115
+        self._session = self._session_factory()
 
         # Services
         self._property_service = PropertyService(self._session)
@@ -115,19 +117,17 @@ class BasePipeline(ABC):
         await self._minio.ensure_bucket()
 
         # Track run
-        import uuid  # noqa: PLC0415
-
         self._run_id = str(uuid.uuid4())
         self.logger = get_logger(
             portal=self.PORTAL_SOURCE,
-            scraper_id=str(id(self)),
+            scraper_id=self._scraper_id,
             run_id=self._run_id,
         )
 
         if self._run_service:
             run = await self._run_service.create_run(
                 portal_source=self.PORTAL_SOURCE,
-                scraper_id=str(id(self)),
+                scraper_id=self._scraper_id,
             )
             self._run_id = run.id
             self.logger.info(

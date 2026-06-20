@@ -44,8 +44,16 @@ class MinioStorageClient:
         secure: bool | None = None,
     ) -> None:
         self._endpoint = endpoint or os.environ.get("MINIO_ENDPOINT", "localhost:9000")
-        self._access_key = access_key or os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
-        self._secret_key = secret_key or os.environ.get("MINIO_SECRET_KEY", "minioadmin")
+        key = access_key or os.environ.get("MINIO_ACCESS_KEY")
+        if not key:
+            msg = "MINIO_ACCESS_KEY must be set via env var or access_key parameter"
+            raise ValueError(msg)
+        secret = secret_key or os.environ.get("MINIO_SECRET_KEY")
+        if not secret:
+            msg = "MINIO_SECRET_KEY must be set via env var or secret_key parameter"
+            raise ValueError(msg)
+        self._access_key = key
+        self._secret_key = secret
         self._bucket = bucket or os.environ.get("MINIO_BUCKET", "property-photos")
         if secure is None:
             raw = os.environ.get("MINIO_SECURE", "false")
