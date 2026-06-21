@@ -195,12 +195,20 @@ class BasePipeline(ABC):
             "PUSHGATEWAY_URL",
             "http://pushgateway:9091",
         )
-        push_metrics(pushgateway_url, self.PORTAL_SOURCE)
-        self.logger.info(
-            "Metrics pushed to Pushgateway",
-            pushgateway_url=pushgateway_url,
-            portal=self.PORTAL_SOURCE,
-        )
+        try:
+            push_metrics(pushgateway_url, self.PORTAL_SOURCE)
+            self.logger.info(
+                "Metrics pushed to Pushgateway",
+                pushgateway_url=pushgateway_url,
+                portal=self.PORTAL_SOURCE,
+            )
+        except Exception:
+            self.logger.warning(
+                "Failed to push metrics to Pushgateway",
+                pushgateway_url=pushgateway_url,
+                portal=self.PORTAL_SOURCE,
+                exc_info=True,
+            )
 
         # Clean up
         if self._session:

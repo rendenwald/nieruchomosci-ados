@@ -12,7 +12,9 @@ route:
 receivers:
   - name: "console"
     webhook_configs:
-      - url: "http://localhost:9093/alertmanager/-/reload"
+      # MVP: no-op webhook — alerts visible in Alertmanager UI at :9093.
+      # Replace with email/Slack/PagerDuty in production.
+      - url: "http://127.0.0.1:65535/"
         send_resolved: true
 
 # ── Email receiver (uncomment + configure SMTP to enable) ──────────────

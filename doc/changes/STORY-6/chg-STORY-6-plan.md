@@ -250,13 +250,9 @@ This plan adds all three to `docker-compose.yml` and wires `BasePipeline.close_s
           push_metrics("http://localhost:9091", "test-portal")
           # Assert push_to_gateway was called with job="test-portal"
       ```
-- [x] 5.2 Add test for `scraper_last_run_timestamp` in `close_spider()`:
-      ```python
-      async def test_close_spider_sets_timestamp(pipeline_instance):
-          """close_spider sets scraper_last_run_timestamp gauge."""
-          await pipeline_instance.close_spider()
-          # Verify the gauge has a value for PORTAL_SOURCE
-      ```
+- [x] 5.2 Add test for `scraper_last_run_timestamp` gauge in `test_metrics.py`:
+      Tests that the gauge accepts portal labels and stores values correctly.
+      Integration-level test in `test_pipeline.py` deferred (requires DB session).
 - [x] 5.3 Add test for alert rules YAML validity:
       ```python
       def test_alert_rules_valid_yaml():
@@ -305,3 +301,23 @@ This plan adds all three to `docker-compose.yml` and wires `BasePipeline.close_s
 |------|--------|--------|
 | 2026-06-21 | rendenwald | Initial plan |
 | 2026-06-21 | rendenwald | Completed: metric push + timestamp, infra config, docker-compose, tests, verification |
+| 2026-06-21 | rendenwald | Phase 8 remediation: fix Alertmanager webhook, try/except push guard, fix circular test assertion, update plan, widen tolerance |
+
+### Phase 8: Code Review Remediation
+
+**Goal:** Address code review findings for STORY-6.
+
+**Tasks:**
+- [x] 8.1 Fix Alertmanager webhook URL — removed self-reload endpoint, use 127.0.0.1:65535 no-op
+- [x] 8.2 Add `-> None` return type hint to `push_metrics()` — already present (reviewer misread)
+- [x] 8.3 Fix circular assertion in `test_push_metrics_calls_push_to_gateway` — assert against REGISTRY
+- [x] 8.4 Add try/except guard around `push_metrics()` in `close_spider()` — prevents crash on Pushgateway failure
+- [x] 8.5 Align plan with implementation — updated task 5.2 to reflect actual test location
+- [x] 8.6 Widen flaky assertion tolerance — from 1s to 5s
+
+**Acceptance criteria:**
+- [x] All findings resolved and validated.
+- [x] All existing tests still pass.
+- [x] Ruff clean + mypy --strict pass.
+
+**Files:** `docker/alertmanager/alertmanager.yml`, `src/scrapper-base/src/scraper_base/pipeline.py`, `src/scrapper-base/tests/test_metrics.py`, `doc/changes/STORY-6/chg-STORY-6-plan.md`

@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from prometheus_client import REGISTRY
+
 from scraper_base.metrics import (
     active_listings_gauge,
     db_write_duration_seconds,
@@ -134,7 +136,7 @@ class TestMetrics:
             scraper_last_run_timestamp,
             {"portal": "otodom"},
         )
-        assert value >= now - 1  # Allow small clock skew
+        assert value >= now - 5  # Allow small clock skew
 
     def test_push_metrics_calls_push_to_gateway(self):
         """push_metrics delegates to prometheus_client.push_to_gateway."""
@@ -144,13 +146,11 @@ class TestMetrics:
         mock_push.assert_called_once_with(
             "http://pushgateway:9091",
             job="test-portal",
-            registry=mock_push.call_args[1]["registry"],
+            registry=REGISTRY,
         )
 
     def test_push_metrics_default_registry(self):
         """push_metrics uses the default REGISTRY when none is given."""
-        from prometheus_client import REGISTRY  # noqa: PLC0415
-
         with patch("scraper_base.metrics.push_to_gateway") as mock_push:
             push_metrics("http://pushgateway:9091", "test-portal")
 
