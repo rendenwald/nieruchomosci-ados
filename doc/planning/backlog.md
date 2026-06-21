@@ -11,7 +11,7 @@
 | ID | Title | Type | Priority | Status | Labels |
 |----|-------|------|----------|--------|--------|
 | STORY-1 | Provide `BasePipeline` with DB, logging, metrics | story | high | done | epic, change |
-| STORY-2 | Handle concurrent writes safely | story | high | todo | change |
+| STORY-2 | Handle concurrent writes safely | story | high | done | change |
 | STORY-3 | Update `last_seen_at` and changed fields on existing property | story | high | done | change |
 | STORY-4 | Maintain backwards compatibility (semver) | story | medium | todo | change |
 | STORY-5 | Emit Prometheus metrics automatically | story | medium | todo | change |
@@ -114,6 +114,6 @@
 ## Stats
 
 - **Total items:** 52
-- **Todo:** 44
+- **Todo:** 43
 - **In progress:** 0
-- **Done:** 8
+- **Done:** 9
