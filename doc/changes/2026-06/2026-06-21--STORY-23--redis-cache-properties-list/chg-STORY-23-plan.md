@@ -118,22 +118,22 @@ dependency management, and editable link to `scrapper-base`.
 
 **Tasks**:
 
-- [ ] **1.1** Create directory tree: `app/`, `app/core/`, `app/services/`, `app/routers/`,
-      `app/schemas/`, `tests/`
-- [ ] **1.2** Create `pyproject.toml` with dependencies: `fastapi`, `uvicorn[standard]`,
+- [x] **1.1** Create directory tree: `app/`, `app/core/`, `app/services/`, `app/routers/`,
+      `app/schemas/`, `tests/` (done)
+- [x] **1.2** Create `pyproject.toml` with dependencies: `fastapi`, `uvicorn[standard]`,
       `sqlalchemy>=2.0,<3.0`, `asyncpg>=0.29,<1.0`, `redis>=5.0,<6.0`,
       `pydantic>=2.0,<3.0`, `pydantic-settings>=2.0,<3.0`, `prometheus-client>=0.20,<1.0`,
       `structlog>=24.0,<25.0`, `geoalchemy2>=0.15,<1.0` plus `scrapper-base` as
-      path dependency (`-e ../scrapper-base`)
-- [ ] **1.3** Add dev dependencies: `pytest>=8.0,<9.0`, `pytest-asyncio>=0.24,<1.0`,
+      path dependency (`[tool.uv.sources]` with `editable = true`) (done)
+- [x] **1.3** Add dev dependencies: `pytest>=8.0,<9.0`, `pytest-asyncio>=0.24,<1.0`,
       `pytest-cov>=5.0,<6.0`, `fakeredis[lua]>=2.20,<3.0`, `ruff>=0.5,<1.0`,
-      `mypy>=1.10,<2.0`, `httpx>=0.27,<1.0` (for TestClient)
-- [ ] **1.4** Create `app/__init__.py` and all `__init__.py` files for subpackages
-- [ ] **1.5** Create `app/main.py` with FastAPI app factory (`create_app()` function)
-      returning the ASGI application, with lifespan handler for startup/shutdown
-- [ ] **1.6** Configure ruff and mypy settings in `pyproject.toml` matching
-      scrapper-base conventions (line-length 120, strict mypy)
-- [ ] **1.7** Run `uv sync` to create virtualenv and resolve dependencies
+      `mypy>=1.10,<2.0`, `httpx>=0.27,<1.0` (for TestClient) (done)
+- [x] **1.4** Create `app/__init__.py` and all `__init__.py` files for subpackages (done)
+- [x] **1.5** Create `app/main.py` with FastAPI app factory (`create_app()` function)
+      returning the ASGI application, with lifespan handler for startup/shutdown (done)
+- [x] **1.6** Configure ruff and mypy settings in `pyproject.toml` matching
+      scrapper-base conventions (line-length 120, strict mypy) (done)
+- [x] **1.7** Run `uv sync` to create virtualenv and resolve dependencies (done, all 88 packages resolved)
 
 **Acceptance Criteria**:
 
@@ -663,7 +663,7 @@ reconcile the plan and spec with the final implementation.
 
 | Phase | Status | Started | Completed | Commit | Notes |
 |-------|--------|---------|-----------|--------|-------|
-| Phase 1: Scaffold | ⬜ Pending | | | | |
+| Phase 1: Scaffold | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | ruff/mypy pass, create_app() works | |
 | Phase 2: Core Config | ⬜ Pending | | | | |
 | Phase 3: Cache Service | ⬜ Pending | | | | |
 | Phase 4: Schemas | ⬜ Pending | | | | |
