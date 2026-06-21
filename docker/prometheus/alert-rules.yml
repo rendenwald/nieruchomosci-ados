@@ -1,0 +1,28 @@
+# Alert rules — Real Estate Aggregation Platform
+#
+# These rules fire when scraper error rates exceed thresholds or
+# scrapers stop running. Rules are evaluated every 15s (set by
+# evaluation_interval in prometheus.yml).
+
+groups:
+  - name: scrapers
+    rules:
+      - alert: ScraperHighErrorRate
+        expr: |
+          rate(scrape_errors_total[15m]) /
+          (rate(listings_scraped_total[15m]) > 0 or 1) > 0.05
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scraper {{ $labels.portal }} error rate > 5%"
+          description: "Error rate: {{ $value | humanizePercentage }}"
+
+      - alert: ScraperNotRunning
+        expr: |
+          time() - scraper_last_run_timestamp > 86400
+        labels:
+          severity: critical
+        annotations:
+          summary: "Scraper {{ $labels.portal }} not run > 24h"
+          description: "Last run: {{ $value | humanizeDuration }} ago"

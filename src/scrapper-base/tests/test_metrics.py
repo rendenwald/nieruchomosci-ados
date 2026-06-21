@@ -1,5 +1,7 @@
 """Tests for Prometheus metric definitions and helpers."""
 
+from unittest.mock import patch
+
 from scraper_base.metrics import (
     active_listings_gauge,
     db_write_duration_seconds,
@@ -8,8 +10,10 @@ from scraper_base.metrics import (
     listings_scraped_total,
     observe_db_write,
     observe_scrape_duration,
+    push_metrics,
     scrape_duration_seconds,
     scrape_errors_total,
+    scraper_last_run_timestamp,
     set_active_listings,
 )
 
@@ -119,3 +123,36 @@ class TestMetrics:
             {"portal": "otodom"},
         )
         assert value == 10.0
+
+    def test_scraper_last_run_timestamp_sets_label(self):
+        """scraper_last_run_timestamp gauge accepts portal labels."""
+        import time  # noqa: PLC0415
+
+        now = time.time()
+        scraper_last_run_timestamp.labels(portal="otodom").set(now)
+        value = _get_gauge_value(
+            scraper_last_run_timestamp,
+            {"portal": "otodom"},
+        )
+        assert value >= now - 1  # Allow small clock skew
+
+    def test_push_metrics_calls_push_to_gateway(self):
+        """push_metrics delegates to prometheus_client.push_to_gateway."""
+        with patch("scraper_base.metrics.push_to_gateway") as mock_push:
+            push_metrics("http://pushgateway:9091", "test-portal")
+
+        mock_push.assert_called_once_with(
+            "http://pushgateway:9091",
+            job="test-portal",
+            registry=mock_push.call_args[1]["registry"],
+        )
+
+    def test_push_metrics_default_registry(self):
+        """push_metrics uses the default REGISTRY when none is given."""
+        from prometheus_client import REGISTRY  # noqa: PLC0415
+
+        with patch("scraper_base.metrics.push_to_gateway") as mock_push:
+            push_metrics("http://pushgateway:9091", "test-portal")
+
+        _, kwargs = mock_push.call_args
+        assert kwargs["registry"] is REGISTRY

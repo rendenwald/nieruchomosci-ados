@@ -11,12 +11,15 @@
 #   Credentials are read from .env (git-ignored).
 #
 # Services:
-#   postgres — PostgreSQL 16 + PostGIS (port 5432)
-#   redis    — Redis 7 cache (port 6379)
-#   minio    — MinIO object storage (API: 9000, Console: 9001)
+#   postgres    — PostgreSQL 16 + PostGIS (port 5432)
+#   redis       — Redis 7 cache (port 6379)
+#   minio       — MinIO object storage (API: 9000, Console: 9001)
+#   pushgateway — Prometheus Pushgateway for batch job metrics (port 9091)
+#   prometheus  — Prometheus metrics scraper (port 9090)
+#   alertmanager — Alertmanager alert routing (port 9093)
 #
-# Later additions (Sprint 3+):
-#   prometheus, grafana, loki, alertmanager
+# Future additions:
+#   grafana, loki
 
 services:
   postgres:
@@ -85,10 +88,52 @@ services:
     networks:
       - realestate-net
 
+  pushgateway:
+    image: prom/pushgateway
+    container_name: realestate-pushgateway
+    restart: unless-stopped
+    ports:
+      - "${PUSHGATEWAY_PORT:-9091}:9091"
+    networks:
+      - realestate-net
+
+  prometheus:
+    image: prom/prometheus
+    container_name: realestate-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./docker/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}"
+    networks:
+      - realestate-net
+
+  alertmanager:
+    image: prom/alertmanager
+    container_name: realestate-alertmanager
+    restart: unless-stopped
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ./docker/alertmanager:/etc/alertmanager:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    networks:
+      - realestate-net
+
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  prometheus_data:
+  alertmanager_data:
 
 networks:
   realestate-net:
