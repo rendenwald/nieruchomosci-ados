@@ -168,22 +168,9 @@ covering Redis connection, database connection, API settings, and Prometheus met
 
 **Tasks**:
 
-- [ ] **2.1** Create `app/core/config.py` with `Settings(BaseSettings)` class:
-  - `REDIS_URL: str = "redis://localhost:6379/0"`
-  - `REDIS_POOL_SIZE: int = 10`
-  - `REDIS_TIMEOUT_SECONDS: int = 2`
-  - `REDIS_HEALTH_CHECK_INTERVAL: int = 30`
-  - `REDIS_HEALTH_CHECK_FAILURE_THRESHOLD: int = 3`
-  - `DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/realestate"`
-  - `DB_POOL_SIZE: int = 5`
-  - `CACHE_TTL_SECONDS: int = 120`
-  - `API_PREFIX: str = "/api/v1"`
-  - `PROPERTIES_MAX_LIMIT: int = 100`
-  - `PROPERTIES_DEFAULT_LIMIT: int = 20`
-  - `METRICS_ENABLED: bool = True`
-  - `CACHE_KEY_PREFIX: str = "properties:list:v1"`
-- [ ] **2.2** Create `app/core/__init__.py` that exports `get_settings()` singleton
-- [ ] **2.3** Create `app/core/metrics.py` with Prometheus metric definitions:
+- [x] **2.1** Create `app/core/config.py` with `Settings(BaseSettings)` class (done during Phase 1)
+- [x] **2.2** Create `app/core/__init__.py` that exports `get_settings()` singleton (done during Phase 1)
+- [x] **2.3** Create `app/core/metrics.py` with Prometheus metric definitions (done):
   - `cache_hits = Counter("cache_hits_total", "...", ["endpoint", "cache_key_prefix"])`
   - `cache_misses = Counter("cache_misses_total", "...", ["endpoint", "cache_key_prefix"])`
   - `cache_errors = Counter("cache_errors_total", "...", ["endpoint", "operation", "error_type"])`
@@ -664,7 +651,7 @@ reconcile the plan and spec with the final implementation.
 | Phase | Status | Started | Completed | Commit | Notes |
 |-------|--------|---------|-----------|--------|-------|
 | Phase 1: Scaffold | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | ruff/mypy pass, create_app() works | |
-| Phase 2: Core Config | ⬜ Pending | | | | |
+| Phase 2: Core Config | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | Settings with all env vars, Prometheus Counter/Histogram/Gauge metrics |
 | Phase 3: Cache Service | ⬜ Pending | | | | |
 | Phase 4: Schemas | ⬜ Pending | | | | |
 | Phase 5: Properties Router | ⬜ Pending | | | | |
