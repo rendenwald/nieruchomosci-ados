@@ -11,6 +11,11 @@ from scraper_base.services import AgencyService, PropertyService, ScraperRunServ
 class TestPropertyService:
     """PropertyService business logic."""
 
+    async def test_dialect_detection(self, db_session: AsyncSession):
+        """On SQLite, _dialect is set to 'sqlite'."""
+        service = PropertyService(db_session)
+        assert service._dialect == "sqlite"
+
     async def test_upsert_new(self, db_session: AsyncSession, sample_property):
         """New property is inserted and is_new=True."""
         service = PropertyService(db_session)
