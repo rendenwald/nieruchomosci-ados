@@ -334,14 +334,9 @@ cache-aside integration, pagination, and `X-Cache` headers.
 
 **Tasks**:
 
-- [ ] **6.1** Create `app/routers/health.py`:
-  - `GET /health` returns `{"status": "ok", "redis": "ok"|"degraded", "database": "ok"}`
-  - `redis` field reflects current health-check state from `RedisClient`
-  - Health-check runs periodically (every 30s by default, configurable via settings)
-  - Three consecutive failures mark Redis as degraded
-  - On recovery (successful ping after degraded), mark as ok and log transition
-- [ ] **6.2** Register `/health` router in `app/main.py`
-- [ ] **6.3** Wire health-check loop into the app lifespan
+- [x] **6.1** Create `app/routers/health.py`: GET /health with redis status (done)
+- [x] **6.2** Register `/health` router in `app/main.py` (done)
+- [x] **6.3** Wire background health-check loop into the app lifespan (done)
 
 **Acceptance Criteria**:
 
@@ -583,7 +578,7 @@ reconcile the plan and spec with the final implementation.
 | Phase 3: Cache Service | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | RedisClient with pool, CacheService with get_or_compute, lock-based dedup |
 | Phase 4: Schemas | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | PropertyCard, SearchParams (validated), PaginatedResponse[PropertyCard] |
 | Phase 5: Properties Router | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | Cache-aside route with DB query, pagination, X-Cache header |
-| Phase 6: Health Endpoint | ⬜ Pending | | | | |
+| Phase 6: Health Endpoint | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | /health returns redis status, periodic health check task |
 | Phase 7: Tests | ⬜ Pending | | | | |
 | Phase 8: Docker + Docs | ⬜ Pending | | | | |
 | Phase 9: Review & Release | ⬜ Pending | | | | |
