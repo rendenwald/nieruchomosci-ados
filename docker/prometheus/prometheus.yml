@@ -1,0 +1,18 @@
+# Prometheus configuration — Real Estate Aggregation Platform
+#
+# Scrapes Pushgateway for batch scraper metrics, plus future targets
+# (FastAPI, k8s nodes, etc.) as they are added.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+rule_files:
+  - "alert-rules.yml"
+
+scrape_configs:
+  - job_name: "pushgateway"
+    honor_labels: true
+    static_configs:
+      - targets: ["pushgateway:9091"]

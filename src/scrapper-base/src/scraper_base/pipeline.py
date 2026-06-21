@@ -6,6 +6,7 @@ All portal-specific scrapers subclass ``BasePipeline`` and implement the
 metrics auto-emission, structured logging, and MinIO storage.
 """
 
+import os
 import time
 import uuid
 from abc import ABC, abstractmethod
@@ -21,6 +22,8 @@ from scraper_base.metrics import (
     increment_errors,
     increment_listings_scraped,
     observe_db_write,
+    push_metrics,
+    scraper_last_run_timestamp,
     set_active_listings,
 )
 from scraper_base.services import PropertyService, ScraperRunService
@@ -148,7 +151,8 @@ class BasePipeline(ABC):
         """Clean up connections when the spider closes.
 
         Flushes pending operations, records run completion, emits final
-        metrics, and closes the database session.
+        metrics, pushes metrics to Prometheus Pushgateway, and closes
+        the database session.
 
         Args:
             spider: The Scrapy ``Spider`` instance (unused, enables override).
@@ -181,6 +185,21 @@ class BasePipeline(ABC):
             items_new=self._items_new,
             items_updated=self._items_updated,
             errors=self._errors,
+        )
+
+        # ── Push metrics to Prometheus Pushgateway ──────────────────────
+        scraper_last_run_timestamp.labels(portal=self.PORTAL_SOURCE).set(
+            time.time(),
+        )
+        pushgateway_url = os.environ.get(
+            "PUSHGATEWAY_URL",
+            "http://pushgateway:9091",
+        )
+        push_metrics(pushgateway_url, self.PORTAL_SOURCE)
+        self.logger.info(
+            "Metrics pushed to Pushgateway",
+            pushgateway_url=pushgateway_url,
+            portal=self.PORTAL_SOURCE,
         )
 
         # Clean up

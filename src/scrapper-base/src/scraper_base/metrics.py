@@ -10,9 +10,17 @@ Metrics defined:
 - ``scrape_duration_seconds`` — Histogram per portal
 - ``db_write_duration_seconds`` — Histogram per operation (insert/update)
 - ``active_listings_gauge`` — Gauge per portal
+- ``scraper_last_run_timestamp`` — Gauge per portal (epoch seconds)
 """
 
-from prometheus_client import Counter, Gauge, Histogram
+from prometheus_client import (
+    REGISTRY,
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    push_to_gateway,
+)
 
 # ---------------------------------------------------------------------------
 # Counters
@@ -62,6 +70,12 @@ active_listings_gauge: Gauge = Gauge(
     ["portal"],
 )
 
+scraper_last_run_timestamp: Gauge = Gauge(
+    "scraper_last_run_timestamp",
+    "Timestamp of the last completed scraper run (epoch seconds)",
+    ["portal"],
+)
+
 # ---------------------------------------------------------------------------
 # Convenience helpers
 # ---------------------------------------------------------------------------
@@ -94,3 +108,24 @@ def observe_db_write(operation: str, duration_seconds: float) -> None:
 def set_active_listings(portal: str, count: int) -> None:
     """Set the active listings gauge for a portal."""
     active_listings_gauge.labels(portal=portal).set(count)
+
+
+def push_metrics(
+    pushgateway_url: str,
+    job_name: str,
+    *,
+    registry: CollectorRegistry = REGISTRY,
+) -> None:
+    """Push all registered metrics to Prometheus Pushgateway.
+
+    Called from ``BasePipeline.close_spider()`` after a scraper run
+    completes. Pushes all metrics in the default registry.
+
+    Args:
+        pushgateway_url: Full URL to the Pushgateway
+            (e.g. ``http://pushgateway:9091``).
+        job_name: Unique job name for the push (typically the portal source).
+        registry: The registry to push. Defaults to the global ``REGISTRY``.
+
+    """
+    push_to_gateway(pushgateway_url, job=job_name, registry=registry)
