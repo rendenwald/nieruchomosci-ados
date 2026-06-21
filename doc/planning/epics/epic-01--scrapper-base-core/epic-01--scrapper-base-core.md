@@ -33,4 +33,4 @@
 | STORY-3 | Update `last_seen_at` and changed fields on existing property | ✅ done (absorbed into STORY-1/STORY-2) |
 | STORY-4 | Maintain backwards compatibility (semver) | todo |
 | STORY-5 | Emit Prometheus metrics automatically | ✅ done |
-| STORY-6 | Send alert via Alertmanager on scraper errors | todo |
+| STORY-6 | Send alert via Alertmanager on scraper errors | ✅ done |
