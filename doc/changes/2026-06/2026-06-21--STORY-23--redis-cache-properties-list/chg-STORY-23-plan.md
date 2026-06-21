@@ -205,36 +205,11 @@ cache-aside `get_or_compute` pattern with graceful fallback.
 
 **Tasks**:
 
-- [ ] **3.1** Create `app/services/redis_client.py` with `RedisClient` class:
-  - `async connect()` — create `redis.asyncio.Redis` connection pool from settings
-  - `async disconnect()` — close pool gracefully
-  - `async ping() -> bool` — health check with timeout
-  - `async get(key: str) -> str | None` — GET with timeout and exception handling
-  - `async set(key: str, value: str, ttl: int) -> None` — SETEX with timeout
-  - `async set_nx(key: str, value: str, ttl: int) -> bool` — SET NX for lock
-  - Internal connection state tracking for degraded mode
-  - Logging at startup (info) and on errors (warning)
-- [ ] **3.2** Create `app/services/cache_key.py` with cache key utility:
-  - `normalize_params(params: dict) -> str` — sort keys, omit empty defaults,
-    serialize to canonical JSON
-  - `make_cache_key(prefix: str, params: dict) -> str` — SHA-256 hex of normalized
-    params, returns `{prefix}:{sha256hex}`
-  - `calculate_sha256(data: str) -> str` — wrapper around `hashlib.sha256`
-- [ ] **3.3** Create `app/services/cache_service.py` with `CacheService` class:
-  - `async get_or_compute(key: str, compute: Callable, ttl: int) -> tuple[str, str]`
-    — returns `(json_data, cache_status)` where status is one of
-    `hit | miss | miss (fallback)`
-  - Implement concurrent request dedup: use `SET NX` with a short-lived lock key
-    (`{key}:lock`, TTL 5s) so only one request queries the DB per cache key
-  - On cache hit: deserialize and return with `hit` status
-  - On cache miss: call `compute()` (the DB query), serialize result, store with
-    SETEX, return with `miss` status
-  - On Redis exception: log warning, increment `cache_errors_total`, call `compute()`,
-    return with `miss (fallback)` status — do NOT write to cache
-  - Health-check state: if degraded, skip Redis entirely; periodically ping to
-    recover
-- [ ] **3.4** Wire `RedisClient` into lifecycle — instantiate in `create_app()` lifespan,
-      attach to `app.state.redis` and `app.state.cache_service`
+- [x] **3.1** Create `app/services/redis_client.py` with `RedisClient` class (done)
+- [x] **3.2** Create `app/services/cache_key.py` with cache key utility (done)
+- [x] **3.3** Create `app/services/cache_service.py` with `CacheService` class (done)
+- [x] **3.4** Wire `RedisClient` into lifecycle — instantiate in `create_app()` lifespan,
+      attach to `app.state.redis_client` and `app.state.cache_service` (done)
 
 **Acceptance Criteria**:
 
@@ -652,7 +627,7 @@ reconcile the plan and spec with the final implementation.
 |-------|--------|---------|-----------|--------|-------|
 | Phase 1: Scaffold | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | ruff/mypy pass, create_app() works | |
 | Phase 2: Core Config | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | Settings with all env vars, Prometheus Counter/Histogram/Gauge metrics |
-| Phase 3: Cache Service | ⬜ Pending | | | | |
+| Phase 3: Cache Service | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | RedisClient with pool, CacheService with get_or_compute, lock-based dedup |
 | Phase 4: Schemas | ⬜ Pending | | | | |
 | Phase 5: Properties Router | ⬜ Pending | | | | |
 | Phase 6: Health Endpoint | ⬜ Pending | | | | |
