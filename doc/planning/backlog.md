@@ -17,6 +17,8 @@
 | STORY-5 | Emit Prometheus metrics automatically | story | medium | todo | change |
 | STORY-6 | Send alert via Alertmanager on scraper errors | story | medium | todo | change |
 
+> **Note:** STORY-3 was implicitly delivered by STORY-1's `upsert_property()` (the existing-record update path was built as part of the initial upsert implementation). No separate change artifacts.
+
 ## Epic 2: Scraper Metrics
 
 | ID | Title | Type | Priority | Status | Labels |

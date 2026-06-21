@@ -29,8 +29,8 @@
 | ID | Title |
 |----|-------|
 | STORY-1 | Provide `BasePipeline` with DB, logging, metrics | ✅ done |
-| STORY-2 | Handle concurrent writes safely | todo |
-| STORY-3 | Update `last_seen_at` and changed fields on existing property | ✅ done |
+| STORY-2 | Handle concurrent writes safely | ✅ done |
+| STORY-3 | Update `last_seen_at` and changed fields on existing property | ✅ done (absorbed into STORY-1/STORY-2) |
 | STORY-4 | Maintain backwards compatibility (semver) | todo |
 | STORY-5 | Emit Prometheus metrics automatically | ✅ done |
 | STORY-6 | Send alert via Alertmanager on scraper errors | todo |
