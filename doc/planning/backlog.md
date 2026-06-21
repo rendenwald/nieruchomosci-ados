@@ -14,10 +14,10 @@
 | STORY-2 | Handle concurrent writes safely | story | high | done | change |
 | STORY-3 | Update `last_seen_at` and changed fields on existing property | story | high | done | change |
 | STORY-4 | Maintain backwards compatibility (semver) | story | medium | todo | change |
-| STORY-5 | Emit Prometheus metrics automatically | story | medium | todo | change |
-| STORY-6 | Send alert via Alertmanager on scraper errors | story | medium | todo | change |
+| STORY-5 | Emit Prometheus metrics automatically | story | medium | done | change |
+| STORY-6 | Send alert via Alertmanager on scraper errors | story | medium | done | change |
 
-> **Note:** STORY-3 was implicitly delivered by STORY-1's `upsert_property()` (the existing-record update path was built as part of the initial upsert implementation). No separate change artifacts.
+> **Note:** STORY-3 was implicitly delivered by STORY-1's `upsert_property()` (the existing-record update path was built as part of the initial upsert implementation). STORY-6 also delivers STORY-12 (Alertmanager notification when error_rate > 5%).
 
 ## Epic 2: Scraper Metrics
 
@@ -29,7 +29,7 @@
 | STORY-9 | Record `scrape_duration_seconds` histogram | story | high | done | change |
 | STORY-10 | Track `db_write_duration_seconds` | story | high | done | change |
 | STORY-11 | Show per-portal dashboard with all metrics in Grafana | story | medium | todo | change |
-| STORY-12 | Trigger Alertmanager notification when error_rate > 5% | story | medium | todo | change |
+| STORY-12 | Trigger Alertmanager notification when error_rate > 5% | story | medium | done | change |
 
 ## Epic 3: Interactive Map
 
@@ -116,6 +116,6 @@
 ## Stats
 
 - **Total items:** 52
-- **Todo:** 43
+- **Todo:** 42
 - **In progress:** 0
-- **Done:** 9
+- **Done:** 10
