@@ -23,10 +23,15 @@ class TestPropertyService:
 
     async def test_upsert_existing(self, db_session: AsyncSession, sample_property):
         """Existing property is updated and is_new=False."""
+        from datetime import UTC, datetime  # noqa: PLC0415
+
         service = PropertyService(db_session)
 
         # Insert first
         await service.upsert_property(sample_property)
+
+        # Capture the timestamp just before the upsert
+        before = datetime.now(UTC)
 
         # Upsert again with updated data
         updated_data = dict(sample_property)
@@ -37,8 +42,9 @@ class TestPropertyService:
         assert is_new2 is False
         assert prop2.price == 500000
         assert prop2.title == "Updated title"
-        # last_seen_at should be refreshed (or at least not be None)
+        # last_seen_at should be refreshed to a time after ``before``
         assert prop2.last_seen_at is not None
+        assert prop2.last_seen_at >= before
 
     async def test_upsert_same_key_no_duplicate(self, db_session: AsyncSession, sample_property):
         """Upserting the same key twice does not create a duplicate."""

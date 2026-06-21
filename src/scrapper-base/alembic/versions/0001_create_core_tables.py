@@ -94,9 +94,15 @@ def upgrade() -> None:
     """)
 
     # Create partitions for known portal sources.
-    # When adding a new portal source:
-    #   1. Add a new PARTITION ... FOR VALUES IN ('<new-portal>') here
-    #   2. Or ensure the 'other' default partition catches it (for dynamic sources)
+    # To add a new portal source after deployment:
+    #   1. CREATE TABLE properties_<new> PARTITION OF properties
+    #      FOR VALUES IN ('<new-portal>');
+    #   2. The 'properties_other' DEFAULT partition catches any sources
+    #      not yet explicitly partitioned. Move data from DEFAULT to a
+    #      dedicated partition via ALTER TABLE ... ATTACH PARTITION.
+    # Example:
+    #   CREATE TABLE properties_morizon PARTITION OF properties
+    #   FOR VALUES IN ('morizon');
     op.execute("CREATE TABLE properties_otodom PARTITION OF properties FOR VALUES IN ('otodom')")
     op.execute("CREATE TABLE properties_gratka PARTITION OF properties FOR VALUES IN ('gratka')")
     op.execute(

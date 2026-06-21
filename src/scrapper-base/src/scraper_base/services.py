@@ -176,6 +176,14 @@ class PropertyService:
         Raises:
             ValueError: If validation fails.
 
+        Note:
+            This method uses a SELECT-then-INSERT/UPDATE pattern which has a
+            TOCTOU race under concurrent access. The unique constraint on
+            ``(portal_source, source_id)`` prevents data corruption, but one
+            caller may receive an exception instead of a clean upsert.
+            A future enhancement could use ``ON CONFLICT DO UPDATE``
+            (PostgreSQL) for atomic upsert.
+
         """
         validated = PropertyCreate.model_validate(data)
         now = datetime.now(UTC)

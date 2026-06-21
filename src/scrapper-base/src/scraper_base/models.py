@@ -10,6 +10,7 @@ Core tables:
 import uuid
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Any
 
 import geoalchemy2  # noqa: F401  # Required for PostGIS Geometry DDL
 from sqlalchemy import (
@@ -59,6 +60,9 @@ class Property(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    # NOTE: Spec F-2 originally called for UUID PK. Integer was chosen for
+    # LIST-partitioning compatibility (partition key must be part of PK).
+    # Decision record: doc/planning/epics/STORY-1/README.md
     portal_source: Mapped[str] = mapped_column(String(50), primary_key=True, nullable=False)
     source_id: Mapped[str] = mapped_column(String(255), nullable=False)
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -93,7 +97,7 @@ class Property(Base):
     year_built: Mapped[int | None] = mapped_column(Integer, nullable=True)
     condition: Mapped[str | None] = mapped_column(String(50), nullable=True)
     heating: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    extras: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    extras: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # Location
     province: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -104,7 +108,7 @@ class Property(Base):
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     location: Mapped[object | None] = mapped_column(
         geoalchemy2.Geometry("POINT", srid=4326),
-        nullable=True,  # type: ignore[arg-type]
+        nullable=True,
     )
 
     # Agency
@@ -112,9 +116,9 @@ class Property(Base):
     agency_source_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Media
-    photos: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    localization: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    building: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    photos: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    localization: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    building: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # Deduplication
     duplicate_group_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), nullable=True)

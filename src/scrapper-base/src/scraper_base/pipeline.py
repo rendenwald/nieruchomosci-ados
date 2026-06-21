@@ -9,9 +9,13 @@ metrics auto-emission, structured logging, and MinIO storage.
 import time
 import uuid
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from scraper_base.database import create_async_engine, create_session_factory
+from scraper_base.database import (
+    create_async_engine,
+    create_session_factory,
+    wait_for_db,
+)
 from scraper_base.logging_config import get_logger
 from scraper_base.metrics import (
     increment_errors,
@@ -21,6 +25,9 @@ from scraper_base.metrics import (
 )
 from scraper_base.services import PropertyService, ScraperRunService
 from scraper_base.storage import MinioStorageClient
+
+if TYPE_CHECKING:
+    from scrapy import Spider  # noqa: TC004  # Imported only for type hints
 
 
 class BasePipeline(ABC):
@@ -88,7 +95,7 @@ class BasePipeline(ABC):
     # Spider lifecycle
     # ------------------------------------------------------------------
 
-    async def open_spider(self, spider: Any) -> None:  # noqa: ANN401
+    async def open_spider(self, spider: "Spider | Any" = None) -> None:
         """Initialise connections when the spider opens.
 
         Creates database engine, session, MinIO client, and records the
@@ -105,6 +112,7 @@ class BasePipeline(ABC):
         # Database
         db_url = get_database_url()
         self._db_engine = create_async_engine(db_url, pool_size=5)
+        await wait_for_db(self._db_engine)
         self._session_factory = create_session_factory(self._db_engine)
         self._session = self._session_factory()
 
@@ -136,7 +144,7 @@ class BasePipeline(ABC):
                 portal=self.PORTAL_SOURCE,
             )
 
-    async def close_spider(self, spider: Any) -> None:  # noqa: ANN401
+    async def close_spider(self, spider: "Spider | Any" = None) -> None:
         """Clean up connections when the spider closes.
 
         Flushes pending operations, records run completion, emits final
@@ -183,8 +191,8 @@ class BasePipeline(ABC):
 
     async def process_item(
         self,
-        item: Any,  # noqa: ANN401
-        spider: Any,  # noqa: ANN401
+        item: Any,
+        spider: "Spider | Any" = None,
     ) -> dict[str, Any]:
         """Process a single scraped item.
 
