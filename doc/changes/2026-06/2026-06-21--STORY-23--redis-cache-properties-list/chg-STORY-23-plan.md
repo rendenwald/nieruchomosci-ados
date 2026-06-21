@@ -251,31 +251,14 @@ and API documentation.
 
 **Tasks**:
 
-- [ ] **4.1** Create `app/schemas/common.py`:
+- [x] **4.1** Create `app/schemas/common.py`:
   - `ErrorResponse(BaseModel)` — `detail: str`
   - `PaginatedResponse(BaseModel, Generic[T])` — `items: list[T]`,
-    `total: int`, `page: int`, `limit: int`, `total_pages: int`
-- [ ] **4.2** Create `app/schemas/property.py`:
-  - `PropertyCard(BaseModel)` — subset of Property fields relevant for listing:
-    `id`, `title`, `property_type`, `price`, `price_currency`, `price_per_m2`,
-    `area`, `rooms`, `city`, `district`, `province`, `latitude`, `longitude`,
-    `agency_name`, `photos` (list of URLs), `source_url`, `portal_source`,
-    `created_at` (from `scraped_at`)
-  - `SearchParams(BaseModel)` — all filter parameters with validation:
-    - `city: str | None = None`
-    - `property_type: str | None = None`
-    - `auction_type: str | None = None`
-    - `market_type: str | None = None`
-    - `price_min: int | None = Field(None, ge=0)`
-    - `price_max: int | None = Field(None, ge=0)`
-    - `area_min: float | None = Field(None, ge=0)`
-    - `area_max: float | None = Field(None, ge=0)`
-    - `rooms: str | None = None`
-    - `bbox: str | None = None`  (minLat,minLng,maxLat,maxLng)
-    - `sort_by: str | None = "last_seen_at:desc"`  (format: `field:direction`)
-    - `page: int = Field(default=1, ge=1)`
-    - `limit: int = Field(default=20, ge=1, le=100)`
-  - `SearchResponse = PaginatedResponse[PropertyCard]`
+    `total: int`, `page: int`, `limit: int`, `total_pages: int` (done)
+- [x] **4.2** Create `app/schemas/property.py`:
+  - `PropertyCard(BaseModel)` — subset of Property fields for listing
+  - `SearchParams(BaseModel)` — all filter params with validation
+  - `SearchResponse = PaginatedResponse[PropertyCard]` (done)
 
 **Acceptance Criteria**:
 
@@ -628,7 +611,7 @@ reconcile the plan and spec with the final implementation.
 | Phase 1: Scaffold | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | ruff/mypy pass, create_app() works | |
 | Phase 2: Core Config | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | Settings with all env vars, Prometheus Counter/Histogram/Gauge metrics |
 | Phase 3: Cache Service | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | RedisClient with pool, CacheService with get_or_compute, lock-based dedup |
-| Phase 4: Schemas | ⬜ Pending | | | | |
+| Phase 4: Schemas | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | PropertyCard, SearchParams (validated), PaginatedResponse[PropertyCard] |
 | Phase 5: Properties Router | ⬜ Pending | | | | |
 | Phase 6: Health Endpoint | ⬜ Pending | | | | |
 | Phase 7: Tests | ⬜ Pending | | | | |
