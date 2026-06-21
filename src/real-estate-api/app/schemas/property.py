@@ -5,15 +5,11 @@ Provides ``PropertyCard`` (listing view), ``SearchParams`` (request validation),
 and ``SearchResponse`` (paginated response).
 """
 
-import re
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from app.schemas.common import PaginatedResponse
-
-# Pattern for sort parameter: ``field:direction``
-_SORT_PATTERN = re.compile(r"^[a-zA-Z_]+:(asc|desc)$")
 
 
 class PropertyCard(BaseModel):
@@ -76,31 +72,12 @@ class SearchParams(BaseModel):
     area_min: float | None = Field(None, ge=0)
     area_max: float | None = Field(None, ge=0)
     rooms: str | None = None
-    sort_by: str | None = "last_seen_at:desc"
+    sort_by: str = Field(
+        default="last_seen_at:desc",
+        pattern=r"^[a-zA-Z_]+:(asc|desc)$",
+    )
     page: int = Field(default=1, ge=1)
     limit: int = Field(default=20, ge=1, le=100)
-
-    @field_validator("sort_by")
-    @classmethod
-    def validate_sort_format(cls, v: str | None) -> str | None:
-        """Validate the sort parameter matches ``field:direction`` format.
-
-        Args:
-            v: The sort string to validate.
-
-        Returns:
-            The validated sort string, or ``"last_seen_at:desc"`` if ``None``.
-
-        Raises:
-            ValueError: If the format does not match ``field:direction``.
-
-        """
-        if v is None:
-            return "last_seen_at:desc"
-        if not _SORT_PATTERN.match(v):
-            msg = f"Invalid sort format: '{v}'. Expected 'field:asc' or 'field:desc'."
-            raise ValueError(msg)
-        return v
 
 
 SearchResponse = PaginatedResponse[PropertyCard]

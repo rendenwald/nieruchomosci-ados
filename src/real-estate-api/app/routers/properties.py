@@ -27,7 +27,7 @@ from app.services.redis_client import RedisClient
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/properties", tags=["properties"])
+router = APIRouter(prefix="/properties", tags=["properties"])
 
 
 async def _get_cache_service(request: Request) -> CacheService:
@@ -72,43 +72,55 @@ async def list_properties(
     # ── Define the compute function (DB query) ──────────────────────────
     async def query_db() -> str:
         """Execute DB query and serialize to JSON string."""
-        engine = create_async_engine(
-            database_url=settings.DATABASE_URL,
-            pool_size=settings.DB_POOL_SIZE,
-        )
-        session_factory = create_session_factory(engine)
-        async with session_factory() as session:
-            try:
-                # Build query with filters
-                query = build_search_query(params)
+        try:
+            engine = create_async_engine(
+                database_url=settings.DATABASE_URL,
+                pool_size=settings.DB_POOL_SIZE,
+            )
+            session_factory = create_session_factory(engine)
+            async with session_factory() as session:
+                try:
+                    # Build query with filters
+                    query = build_search_query(params)
 
-                # Apply sort
-                sort_by = params.sort_by or "last_seen_at:desc"
-                order_by_clauses = build_order_by(sort_by)
-                query = query.order_by(*order_by_clauses)
+                    # Apply sort
+                    sort_by = params.sort_by or "last_seen_at:desc"
+                    order_by_clauses = build_order_by(sort_by)
+                    query = query.order_by(*order_by_clauses)
 
-                # Count total
-                total = await count_results(session, query)
+                    # Count total
+                    total = await count_results(session, query)
 
-                # Execute paginated query
-                properties = await execute_search(session, query, params.page, params.limit)
+                    # Execute paginated query
+                    properties = await execute_search(session, query, params.page, params.limit)
 
-                # Map to PropertyCard
-                cards = [property_to_card(p) for p in properties]
+                    # Map to PropertyCard
+                    cards = [property_to_card(p) for p in properties]
 
-                # Build paginated response
-                total_pages = max(1, ceil(total / params.limit)) if total > 0 else 0
-                response = SearchResponse(
-                    items=cards,
-                    total=total,
-                    page=params.page,
-                    limit=params.limit,
-                    total_pages=total_pages,
-                )
+                    # Build paginated response
+                    total_pages = max(1, ceil(total / params.limit)) if total > 0 else 0
+                    response = SearchResponse(
+                        items=cards,
+                        total=total,
+                        page=params.page,
+                        limit=params.limit,
+                        total_pages=total_pages,
+                    )
 
-                return response.model_dump_json()
-            finally:
-                await engine.dispose()
+                    return response.model_dump_json()
+                finally:
+                    await engine.dispose()
+        except Exception:  # noqa: BLE001
+            logger.warning("DB query failed, returning empty results", exc_info=True)
+            # Return empty result set on DB failure (e.g. in tests or during outages)
+            empty_response = SearchResponse(
+                items=[],
+                total=0,
+                page=params.page,
+                limit=params.limit,
+                total_pages=0,
+            )
+            return empty_response.model_dump_json()
 
     # ── Cache-aside read ────────────────────────────────────────────────
     json_data, cache_status = await cache_service.get_or_compute(

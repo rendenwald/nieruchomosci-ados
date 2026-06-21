@@ -55,15 +55,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     settings = get_settings()
 
-    # Initialise Redis client
-    redis_client = RedisClient()
-    await redis_client.connect()
-    cache_service = CacheService(redis_client)
+    # Use existing Redis client from app.state if already set (e.g. in tests)
+    redis_client: RedisClient | None = getattr(app.state, "redis_client", None)
+    cache_service: CacheService | None = getattr(app.state, "cache_service", None)
 
-    app.state.redis_client = redis_client
-    app.state.cache_service = cache_service
+    if redis_client is None or cache_service is None:
+        # Initialise Redis client from scratch
+        redis_client = RedisClient()
+        await redis_client.connect()
+        cache_service = CacheService(redis_client)
 
-    # Start periodic health check
+        app.state.redis_client = redis_client
+        app.state.cache_service = cache_service
+
+    # Start periodic health check background task
     health_task = asyncio.create_task(_periodic_health_check(redis_client))
 
     logger.info(
@@ -76,11 +81,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     # Shutdown: clean up resources
-    health_task.cancel()
-    try:
-        await health_task
-    except asyncio.CancelledError:
-        pass
+    if health_task is not None:
+        health_task.cancel()
+        try:
+            await health_task
+        except asyncio.CancelledError:
+            pass
     await redis_client.disconnect()
     logger.info("Application shutdown")
 
