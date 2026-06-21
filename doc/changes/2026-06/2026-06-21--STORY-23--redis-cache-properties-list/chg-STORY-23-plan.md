@@ -292,40 +292,10 @@ cache-aside integration, pagination, and `X-Cache` headers.
 
 **Tasks**:
 
-- [ ] **5.1** Create `app/services/property_service.py` with query building:
-  - `build_search_query(params: SearchParams) -> Select` — construct SQLAlchemy
-    `select(Property)` with WHERE clauses for each filter:
-    - `city`: `Property.city.ilike(params.city)`
-    - `property_type`: exact match
-    - `auction_type`: exact match
-    - `market_type`: exact match
-    - `price_min`: `Property.price >= params.price_min`
-    - `price_max`: `Property.price <= params.price_max`
-    - `area_min`: `Property.area >= params.area_min`
-    - `area_max`: `Property.area <= params.area_max`
-    - `rooms`: exact match or range
-    - `bbox`: spatial filter using `ST_Within` or `ST_Intersects`
-    - Always filter: `Property.is_active == True` and `Property.is_canonical == True`
-  - `build_order_by(sort_by: str)` — parse `field:direction`, validate field
-    is sortable, return SQLAlchemy order_by clause
-  - `async count_results(session, query) -> int` — count total matching
-  - `async execute_search(session, query, page, limit) -> list[Property]` —
-    apply offset/limit, execute
-- [ ] **5.2** Create `app/routers/properties.py`:
-  - `GET /api/v1/properties` endpoint:
-    1. Parse and validate `SearchParams` from query parameters
-    2. Normalize params → compute cache key via `make_cache_key`
-    3. Call `cache_service.get_or_compute(key, compute_fn=...)`
-    4. In compute function: build SQL query, execute, map to `PropertyCard`,
-       wrap in `SearchResponse`, serialize to JSON
-    5. Set `X-Cache` response header from returned status
-    6. Optionally set `X-Cache-TTL` header with remaining seconds on hit
-    7. Return `Response(content=json_data, media_type="application/json",
-       headers={"X-Cache": status})`
-  - Handle `X-Cache: miss (fallback)` header value
-- [ ] **5.3** Register router in `app/main.py` under `/api/v1` prefix
-- [ ] **5.4** Add `startup_cache_health_check` in lifespan — ping Redis on startup,
-      log connection status; set `app.state.cache_healthy` for degraded mode
+- [x] **5.1** Create `app/services/property_service.py` with query building (done)
+- [x] **5.2** Create `app/routers/properties.py`: GET /api/v1/properties with cache-aside (done)
+- [x] **5.3** Register router in `app/main.py` under /api/v1 prefix (done)
+- [x] **5.4** Add startup Redis health check in lifespan (done — RedisClient.connect() pings)
 
 **Acceptance Criteria**:
 
@@ -612,7 +582,7 @@ reconcile the plan and spec with the final implementation.
 | Phase 2: Core Config | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | Settings with all env vars, Prometheus Counter/Histogram/Gauge metrics |
 | Phase 3: Cache Service | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | RedisClient with pool, CacheService with get_or_compute, lock-based dedup |
 | Phase 4: Schemas | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | PropertyCard, SearchParams (validated), PaginatedResponse[PropertyCard] |
-| Phase 5: Properties Router | ⬜ Pending | | | | |
+| Phase 5: Properties Router | ✅ Complete | 2026-06-21 | 2026-06-21 | (next commit) | Cache-aside route with DB query, pagination, X-Cache header |
 | Phase 6: Health Endpoint | ⬜ Pending | | | | |
 | Phase 7: Tests | ⬜ Pending | | | | |
 | Phase 8: Docker + Docs | ⬜ Pending | | | | |

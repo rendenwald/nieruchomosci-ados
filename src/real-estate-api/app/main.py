@@ -12,6 +12,7 @@ import structlog
 from fastapi import FastAPI
 
 from app.core.config import get_settings
+from app.routers import properties
 from app.services.cache_service import CacheService
 from app.services.redis_client import RedisClient
 
@@ -72,6 +73,9 @@ def create_app() -> FastAPI:
         docs_url=f"{settings.API_PREFIX}/docs",
         openapi_url=f"{settings.API_PREFIX}/openapi.json",
     )
+
+    # Register routers
+    app.include_router(properties.router, prefix=settings.API_PREFIX)
 
     @app.get(f"{settings.API_PREFIX}/health")
     async def health_check() -> dict[str, str]:
