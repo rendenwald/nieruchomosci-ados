@@ -2,7 +2,7 @@
 change:
   ref: STORY-1
   type: feat
-  status: Accepted
+  status: Merged
   slug: scrapper-base-core
   title: "Provide BasePipeline with DB, logging, metrics"
   owners: ["rendenwald"]

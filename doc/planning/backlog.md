@@ -10,9 +10,9 @@
 
 | ID | Title | Type | Priority | Status | Labels |
 |----|-------|------|----------|--------|--------|
-| STORY-1 | Provide `BasePipeline` with DB, logging, metrics | story | high | in-progress | epic, change |
+| STORY-1 | Provide `BasePipeline` with DB, logging, metrics | story | high | done | epic, change |
 | STORY-2 | Handle concurrent writes safely | story | high | todo | change |
-| STORY-3 | Update `last_seen_at` and changed fields on existing property | story | high | todo | change |
+| STORY-3 | Update `last_seen_at` and changed fields on existing property | story | high | done | change |
 | STORY-4 | Maintain backwards compatibility (semver) | story | medium | todo | change |
 | STORY-5 | Emit Prometheus metrics automatically | story | medium | todo | change |
 | STORY-6 | Send alert via Alertmanager on scraper errors | story | medium | todo | change |
@@ -21,10 +21,11 @@
 
 | ID | Title | Type | Priority | Status | Labels |
 |----|-------|------|----------|--------|--------|
-| STORY-7 | Track `listings_scraped_total` counter per portal | story | high | todo | change |
-| STORY-8 | Increment `scrape_errors_total` with error_type label | story | high | todo | change |
-| STORY-9 | Record `scrape_duration_seconds` histogram | story | high | todo | change |
-| STORY-10 | Track `db_write_duration_seconds` | story | high | todo | change |
+| STORY-5 | Emit Prometheus metrics automatically | story | medium | done | change |
+| STORY-7 | Track `listings_scraped_total` counter per portal | story | high | done | change |
+| STORY-8 | Increment `scrape_errors_total` with error_type label | story | high | done | change |
+| STORY-9 | Record `scrape_duration_seconds` histogram | story | high | done | change |
+| STORY-10 | Track `db_write_duration_seconds` | story | high | done | change |
 | STORY-11 | Show per-portal dashboard with all metrics in Grafana | story | medium | todo | change |
 | STORY-12 | Trigger Alertmanager notification when error_rate > 5% | story | medium | todo | change |
 
@@ -113,6 +114,6 @@
 ## Stats
 
 - **Total items:** 52
-- **Todo:** 52
+- **Todo:** 44
 - **In progress:** 0
-- **Done:** 0
+- **Done:** 8

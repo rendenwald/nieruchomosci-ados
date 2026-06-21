@@ -1,13 +1,13 @@
 ---
 id: SPEC-SCRAPPER-BASE
-status: Draft
+status: Implemented
 created: 2026-06-20
 last_updated: 2026-06-20
 owners: ["rendenwald"]
 service: scrapper-base
 links:
-  related_changes: []
-  decisions: []
+  related_changes: ["STORY-1"]
+  decisions: ["dr-001-property-id-integer-vs-uuid"]
   contracts: []
 ---
 
