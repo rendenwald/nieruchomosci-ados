@@ -10,7 +10,7 @@
 
 | ID | Title | Type | Priority | Status | Labels |
 |----|-------|------|----------|--------|--------|
-| STORY-1 | Provide `BasePipeline` with DB, logging, metrics | story | high | todo | epic, change |
+| STORY-1 | Provide `BasePipeline` with DB, logging, metrics | story | high | in-progress | epic, change |
 | STORY-2 | Handle concurrent writes safely | story | high | todo | change |
 | STORY-3 | Update `last_seen_at` and changed fields on existing property | story | high | todo | change |
 | STORY-4 | Maintain backwards compatibility (semver) | story | medium | todo | change |

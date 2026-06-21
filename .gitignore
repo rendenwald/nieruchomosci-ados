@@ -1,1 +1,18 @@
 .ai/local/
+
+# Environment (secrets)
+.env
+
+# Python
+__pycache__/
+*.egg-info/
+dist/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

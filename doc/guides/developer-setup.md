@@ -143,93 +143,44 @@ playwright --version
 
 ## 7. Docker Environment
 
-Docker is **not installed**. Two options below.
+Docker Desktop with WSL 2 integration is **installed and running** (v29.5.3).
 
-### 7.1 Option A: Docker Desktop with WSL 2 (Recommended for beginners)
-
-Docker Desktop provides a GUI, automatic WSL integration, and comes with Docker Compose.
+Verify Docker is accessible from WSL:
 
 ```bash
-# Step 1: Download Docker Desktop for Windows
-# https://docs.docker.com/desktop/setup/install/windows-install/
-
-# Step 2: Install and enable WSL 2 integration
-#   - Open Docker Desktop → Settings → Resources → WSL Integration
-#   - Enable integration for your Ubuntu WSL distro
-
-# Step 3: Verify in WSL terminal
 docker --version
 docker compose version
-
-# Step 4: (Optional) Buildx for multi-platform builds
-docker buildx version
+docker ps            # should show running containers (not "cannot connect")
 ```
 
-### 7.2 Option B: Docker Engine native in WSL (Lighter, no GUI)
+### 7.1 Running services via Docker Compose
+
+The project already includes `docker-compose.yml` in the root. Run all infrastructure services:
 
 ```bash
-# Install Docker Engine directly in WSL
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose-v2
-
-# Add your user to the docker group (avoids sudo)
-sudo usermod -aG docker $USER
-
-# Start Docker
-sudo service docker start
-
-# Verify
-docker --version
-docker compose version
-```
-
-> **Recommendation:** Option A (Docker Desktop) is simpler for WSL — it handles the Docker daemon lifecycle automatically and provides better integration.
-
-### 7.3 Running services via Docker Compose
-
-Once Docker is set up, you can run all infrastructure services:
-
-```bash
-# Start all services (PostgreSQL, Redis, MinIO)
+# Start all services (PostgreSQL 16 + PostGIS, Redis 7, MinIO)
 docker compose up -d
 
-# Check status
+# Check status (all should be "healthy")
 docker compose ps
 
 # View logs
 docker compose logs -f
+
+# Stop all services
+docker compose down
+
+# Reset all data (delete volumes)
+docker compose down -v
 ```
 
-Example `docker-compose.yml` (to be created in project root):
+**Services:**
 
-```yaml
-services:
-  postgres:
-    image: postgis/postgis:16-3.4
-    ports: ["5432:5432"]
-    environment:
-      POSTGRES_USER: ${USER}
-      POSTGRES_DB: real_estate_dev
-    volumes: [pgdata:/var/lib/postgresql/data]
-
-  redis:
-    image: redis:7-alpine
-    ports: ["6379:6379"]
-    command: ["redis-server", "--maxmemory", "1gb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
-
-  minio:
-    image: minio/minio:latest
-    ports: ["9000:9000", "9001:9001"]
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
-    volumes: [miniodata:/data]
-
-volumes:
-  pgdata:
-  miniodata:
-```
+| Service | Image | Ports | Credentials (from `.env`) |
+|---------|-------|-------|---------------------------|
+| postgres | `postgis/postgis:16-3.4` | `${POSTGRES_PORT:-5432}` | `${POSTGRES_USER}` / `${POSTGRES_PASSWORD}` |
+| redis | `redis:7-alpine` | `${REDIS_PORT:-6379}` | None (no auth) |
+| minio | `minio/minio` | `${MINIO_API_PORT:-9000}` / `${MINIO_CONSOLE_PORT:-9001}` | `${MINIO_ROOT_USER}` / `${MINIO_ROOT_PASSWORD}` |
 
 ---
 
@@ -323,45 +274,57 @@ gh repo view rendenwald/nieruchomosci-ados
 
 ## 10. Quick Verification Script
 
-Run this to verify everything is installed:
+Run these to verify everything is working:
 
 ```bash
+# Tools installed
 echo "=== Python ===" && python3 --version
 echo "=== uv ===" && uv --version
 echo "=== Node.js ===" && node --version
 echo "=== npm ===" && npm --version
-echo "=== PostgreSQL ===" && psql --version
-echo "=== Redis ===" && redis-cli --version
 echo "=== Docker ===" && docker --version
 echo "=== Docker Compose ===" && docker compose version
 echo "=== gh ===" && gh --version
 echo "=== Playwright ===" && npx playwright --version
+
+# Services running (via Docker Compose)
+docker compose ps
+
+# PostgreSQL connectivity
+docker compose exec postgres psql -U postgres -d realestate -c "SELECT postgis_version();"
+
+# Redis connectivity
+docker compose exec redis redis-cli ping
+
+# MinIO connectivity
+docker compose exec minio mc ready local
 ```
 
 ---
 
 ## 11. Environment Variables
 
-Create a `.env` file in the project root:
+All credentials and configuration live in a `.env` file (git-ignored). Copy the template and adjust:
 
 ```bash
-# Database
-DATABASE_URL=postgresql+asyncpg://localhost:5432/real_estate_dev
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# MinIO
-MINIO_ENDPOINT=localhost:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin123
-MINIO_BUCKET=property-photos
-
-# GitHub (for PR operations)
-GH_TOKEN=ghp_...
+cp .env.example .env
 ```
 
-> **Never commit `.env` to git.** Add it to `.gitignore` if not already there.
+Then edit `.env` to match your environment. Default values in `.env.example` work with the Docker Compose stack out of the box.
+
+**Key variables:**
+
+| Variable | Default (Docker) | Purpose |
+|----------|------------------|---------|
+| `DATABASE_URL` | `postgresql+asyncpg://postgres:postgres@localhost:5432/realestate` | Async DB connection |
+| `REDIS_URL` | `redis://localhost:6379/0` | Cache connection |
+| `MINIO_ENDPOINT` | `localhost:9000` | MinIO API endpoint |
+| `MINIO_ACCESS_KEY` | `minioadmin` | MinIO access key |
+| `MINIO_SECRET_KEY` | `minioadmin` | MinIO secret key |
+| `MINIO_BUCKET` | `property-photos` | Photo storage bucket |
+
+> **⚠️ Never commit `.env` to git.** It's already in `.gitignore`.
+> Use `.env.example` as the template for required variables.
 
 ---
 
@@ -370,3 +333,4 @@ GH_TOKEN=ghp_...
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-06-20 | rendenwald | Initial draft |
+| 2026-06-20 | rendenwald | Update for Docker Compose stack (postgres, redis, minio) |
