@@ -11,13 +11,10 @@ occurs, invalidation is silently skipped and the write path is unaffected.
 from __future__ import annotations
 
 import os
-from collections.abc import Awaitable, Callable
-from typing import Any
 
 import structlog
 from prometheus_client import Counter
 from redis.asyncio import ConnectionPool, Redis
-from redis.asyncio.client import Pipeline
 from redis.exceptions import RedisError
 
 logger = structlog.get_logger(__name__)

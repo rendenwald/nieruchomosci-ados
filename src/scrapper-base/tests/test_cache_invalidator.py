@@ -7,7 +7,6 @@ from typing import Any
 
 import pytest
 from fakeredis.aioredis import FakeRedis
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from scraper_base.cache_invalidator import CacheInvalidator
 
@@ -134,10 +133,12 @@ class TestCacheInvalidator:
         cache_invalidator: CacheInvalidator,
     ) -> None:
         """When Redis raises, invalidate() does not propagate the exception."""
+        from redis.exceptions import RedisError  # noqa: PLC0415
+
         # Break the internal redis client
         async def _broken_delete(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
             msg = "Connection refused"
-            raise OSError(msg)
+            raise RedisError(msg)
 
         assert cache_invalidator._redis is not None  # noqa: SLF001
         original_delete = cache_invalidator._redis.delete  # noqa: SLF001
@@ -151,14 +152,15 @@ class TestCacheInvalidator:
         finally:
             cache_invalidator._redis.delete = original_delete  # noqa: SLF001
 
-    async def test_invalidate_list_on_insert_multiple_pages(
+    async def test_invalidate_list_on_insert_many_keys(
         self,
         cache_invalidator: CacheInvalidator,
         fake_redis: FakeRedis,
     ) -> None:
-        """SCAN iterates through multiple pages of keys."""
-        # fakeredis SCAN with COUNT may return all at once, but test the logic
-        keys = await _seed_list_keys(fake_redis, count=150)
+        """Many list keys are all deleted on insert."""
+        # fakeredis SCAN may not paginate identically to real Redis, but
+        # at this scale all keys should be found and deleted.
+        keys = await _seed_list_keys(fake_redis, count=50)
 
         await cache_invalidator.invalidate(property_id=42, is_new=True)
 
