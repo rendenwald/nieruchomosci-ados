@@ -14,6 +14,7 @@ from sqlalchemy import select
 from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from scraper_base.cache_invalidator import CacheInvalidator
 from scraper_base.models import Agency, Property, ScraperRun, ScraperRunStatus
 
 logger = structlog.get_logger(__name__)
@@ -156,13 +157,34 @@ class PropertyService:
     for concurrent safety, with a SELECT-then-INSERT/UPDATE fallback for SQLite.
     """
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        cache_invalidator: CacheInvalidator | None = None,
+    ) -> None:
         self.session = session
+        self.cache_invalidator = cache_invalidator
         # Detect dialect once — immutable for the lifetime of the service.
         # PostgreSQL gets the atomic upsert path; SQLite uses the fallback.
         self._dialect: str = "sqlite"
         if session.bind is not None:
             self._dialect = session.bind.dialect.name
+
+    async def _invalidate_cache(self, property_obj: Property, is_new: bool) -> None:
+        """Fire-and-forget cache invalidation after upsert.
+
+        Never raises — exceptions are caught and logged.
+        """
+        if self.cache_invalidator is None:
+            return
+        try:
+            await self.cache_invalidator.invalidate(property_obj.id, is_new)
+        except Exception:
+            logger.exception(
+                "Cache invalidation failed (suppressed)",
+                property_id=property_obj.id,
+                is_new=is_new,
+            )
 
     async def upsert_property(
         self,
@@ -230,6 +252,10 @@ class PropertyService:
             # On INSERT both scraped_at and last_seen_at are set to the same
             # ``now`` value. On UPDATE only last_seen_at is refreshed.
             is_new = property_obj.scraped_at == property_obj.last_seen_at
+
+            # ── Post-upsert cache invalidation ─────────────────────────
+            await self._invalidate_cache(property_obj, is_new)
+
             return property_obj, is_new
 
         # ── SQLite fallback: SELECT-then-INSERT/UPDATE ───────────────────
@@ -248,6 +274,10 @@ class PropertyService:
                 setattr(existing, key, value)
             self.session.add(existing)
             await self.session.flush()
+
+            # ── Post-upsert cache invalidation ─────────────────────────
+            await self._invalidate_cache(existing, False)
+
             return existing, False
 
         # Insert new record with max(id)+1 fallback for SQLite
@@ -266,6 +296,10 @@ class PropertyService:
         self.session.add(new_property)
         await self.session.flush()
         await self.session.refresh(new_property)
+
+        # ── Post-upsert cache invalidation ─────────────────────────────
+        await self._invalidate_cache(new_property, True)
+
         return new_property, True
 
     async def get_by_source(
