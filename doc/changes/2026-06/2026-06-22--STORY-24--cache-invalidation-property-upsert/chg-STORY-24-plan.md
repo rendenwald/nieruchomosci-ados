@@ -217,17 +217,22 @@ upsert, rather than waiting for the full 120-second TTL to expire.
 
 **Tasks**:
 
-- [ ] **4.1** Create ``src/scrapper-base/tests/test_cache_invalidator.py`` with:
-  - ``test_invalidate_list_on_insert`` — verify SCAN + DEL called for ``properties:list:v1:*``
-  - ``test_invalidate_cities_on_insert`` — verify DEL ``cities:list`` on insert
-  - ``test_invalidate_detail_on_update`` — verify DEL ``properties:detail:{id}`` on update
-  - ``test_no_list_invalidation_on_update`` — verify list caches NOT deleted on update
-  - ``test_skip_when_no_redis_url`` — verify no-op when REDIS_URL not set
-  - ``test_graceful_on_redis_error`` — verify no exception raised when Redis fails
-  - Use ``fakeredis`` for mocking Redis
-- [ ] **4.2** Update ``src/scrapper-base/tests/test_services.py``:
-  - Add test verifying ``upsert_property()`` calls ``CacheInvalidator.invalidate()`` with correct args
-  - Test with both ``is_new=True`` and ``is_new=False``
+- [x] **4.1** Create ``src/scrapper-base/tests/test_cache_invalidator.py`` with:
+  - ``test_invalidate_list_on_insert`` — SCAN + DEL for ``properties:list:v1:*``
+  - ``test_invalidate_cities_on_insert`` — DEL ``cities:list``
+  - ``test_invalidate_detail_on_update`` — DEL ``properties:detail:{id}``
+  - ``test_no_list_invalidation_on_update`` — list NOT deleted on update
+  - ``test_skip_when_no_redis_url`` — no-op
+  - ``test_graceful_on_redis_error`` — no exception
+  - ``test_invalidate_list_on_insert_multiple_pages`` — SCAN pagination
+  - ``test_invalidate_detail_non_existent`` — no-op for missing key
+  - ``test_double_invalidate_harmless`` — idempotent
+  - ``test_cities_key_absent_on_insert`` — no-op for absent key
+- [x] **4.2** Update ``src/scrapper-base/tests/test_services.py``:
+  - ``test_invalidation_called_on_insert`` — ``invalidate()`` called with ``is_new=True``
+  - ``test_invalidation_called_on_update`` — ``invalidate()`` called with ``is_new=False``
+  - ``test_invalidation_failure_does_not_raise`` — error suppressed
+  - ``test_invalidation_skipped_when_none`` — no invalidator
 
 **Acceptance Criteria**:
 
@@ -319,6 +324,6 @@ upsert, rather than waiting for the full 120-second TTL to expire.
 | 1. Environment & Scaffolding | ✅ Complete | 2026-06-22 | 2026-06-22 | In progress | redis>=5.0 added, fakeredis added, cache_invalidator.py created |
 | 2. Hook into upsert_property | ✅ Complete | 2026-06-22 | 2026-06-22 | In progress | PropertyService.__init__ and upsert_property updated, CacheInvalidator exported |
 | 3. Metrics (Observability) | ✅ Complete | 2026-06-22 | 2026-06-22 | In progress | cache_invalidation_total counter defined and incremented |
-| 4. Tests | ❌ Pending | — | — | — | — |
+| 4. Tests | ✅ Complete | 2026-06-22 | 2026-06-22 | adb55a2 | test_cache_invalidator.py with 10 tests, test_services.py updated with 4 invalidation hook tests |
 | 5. Documentation | ✅ Complete | 2026-06-22 | 2026-06-22 | In progress | .env.example updated |
 | 6. Code Review | ❌ Pending | — | — | — | — |
