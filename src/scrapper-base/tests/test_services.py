@@ -1,11 +1,22 @@
 """Tests for service layer (PropertyService, AgencyService, ScraperRunService)."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from scraper_base.cache_invalidator import CacheInvalidator
 from scraper_base.models import Property
 from scraper_base.services import AgencyService, PropertyService, ScraperRunService
+
+
+@pytest.fixture
+def mock_cache_invalidator() -> AsyncMock:
+    """Return a mock CacheInvalidator for testing invalidation hooks."""
+    mock = AsyncMock(spec=CacheInvalidator)
+    mock.is_disabled = False
+    return mock
 
 
 class TestPropertyService:
@@ -176,6 +187,76 @@ class TestPropertyService:
             )
             rows = result.scalars().all()
             assert len(rows) == 1
+
+
+    # ── Cache invalidation hook tests ─────────────────────────────────
+
+    async def test_invalidation_called_on_insert(
+        self,
+        db_session: AsyncSession,
+        sample_property: dict,
+        mock_cache_invalidator: AsyncMock,
+    ) -> None:
+        """upsert_property calls invalidate(is_new=True) on insert."""
+        service = PropertyService(db_session, cache_invalidator=mock_cache_invalidator)
+        prop, is_new = await service.upsert_property(sample_property)
+        assert is_new is True
+        mock_cache_invalidator.invalidate.assert_awaited_once_with(
+            prop.id,
+            True,
+        )
+
+    async def test_invalidation_called_on_update(
+        self,
+        db_session: AsyncSession,
+        sample_property: dict,
+        mock_cache_invalidator: AsyncMock,
+    ) -> None:
+        """upsert_property calls invalidate(is_new=False) on update."""
+        service = PropertyService(db_session, cache_invalidator=mock_cache_invalidator)
+
+        # Insert first
+        await service.upsert_property(sample_property)
+
+        # Reset mock call history so we only track the update call
+        mock_cache_invalidator.invalidate.reset_mock()
+
+        # Update
+        updated = dict(sample_property)
+        updated["price"] = 500000
+        prop2, is_new2 = await service.upsert_property(updated)
+        assert is_new2 is False
+        mock_cache_invalidator.invalidate.assert_awaited_once_with(
+            prop2.id,
+            False,
+        )
+
+    async def test_invalidation_failure_does_not_raise(
+        self,
+        db_session: AsyncSession,
+        sample_property: dict,
+    ) -> None:
+        """When cache invalidator raises, upsert_property still succeeds."""
+        mock_invalidator = AsyncMock(spec=CacheInvalidator)
+        mock_invalidator.invalidate.side_effect = RuntimeError("Redis down")
+
+        service = PropertyService(db_session, cache_invalidator=mock_invalidator)
+
+        # Should not raise despite the invalidator error
+        prop, is_new = await service.upsert_property(sample_property)
+        assert is_new is True
+        assert prop.portal_source == "otodom"
+
+    async def test_invalidation_skipped_when_none(
+        self,
+        db_session: AsyncSession,
+        sample_property: dict,
+    ) -> None:
+        """upsert_property works without a cache_invalidator."""
+        service = PropertyService(db_session)  # no invalidator
+        prop, is_new = await service.upsert_property(sample_property)
+        assert is_new is True
+        assert prop.source_id == "OTODOM-12345"
 
 
 class TestAgencyService:
