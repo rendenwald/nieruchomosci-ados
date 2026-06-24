@@ -18,6 +18,17 @@ groups:
           summary: "Scraper {{ $labels.portal }} error rate > 5%"
           description: "Error rate: {{ $value | humanizePercentage }}"
 
+  - name: redis
+    rules:
+      - alert: RedisDegraded
+        expr: redis_degraded == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis cache layer degraded for > 5 minutes"
+          description: "Redis has been degraded for {{ $value | humanizeDuration }}. API responses are served from the database without caching. Check Redis pod and network connectivity."
+
       - alert: ScraperNotRunning
         expr: |
           time() - scraper_last_run_timestamp > 86400
