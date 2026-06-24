@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     REDIS_TIMEOUT_SECONDS: int = 2
     REDIS_HEALTH_CHECK_INTERVAL: int = 30
     REDIS_HEALTH_CHECK_FAILURE_THRESHOLD: int = 3
+    REDIS_ENABLED: bool = True  # Whether to initialise Redis at startup
+    REDIS_STARTUP_GRACE_PERIOD: int = 30  # Seconds after startup before /ready reports degraded Redis as not-ready
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/realestate"
