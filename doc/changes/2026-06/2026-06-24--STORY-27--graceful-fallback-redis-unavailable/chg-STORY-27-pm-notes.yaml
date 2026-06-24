@@ -1,0 +1,39 @@
+change_id: STORY-27
+title: "Graceful fallback to direct DB query when Redis unavailable"
+phases:
+  clarify_scope: { started: "2026-06-24T10:00:00Z", completed: "2026-06-24T10:00:00Z" }
+  specification: { started: "2026-06-24T10:00:00Z", completed: "2026-06-24T10:00:00Z" }
+  test_planning: { started: "2026-06-24T10:00:00Z", completed: "2026-06-24T10:00:00Z" }
+  delivery_planning: { started: "2026-06-24T10:00:00Z", completed: "2026-06-24T10:00:00Z" }
+  delivery: { started: "2026-06-24T10:05:00Z", completed: "2026-06-24T12:00:00Z" }
+  system_spec_update: { started: null, completed: null }
+  review_fix: { started: null, completed: null }
+  quality_gates: { started: "2026-06-24T12:00:00Z", completed: "2026-06-24T12:05:00Z" }
+  dod_check: { started: "2026-06-24T12:05:00Z", completed: "2026-06-24T12:05:00Z" }
+  pr_creation: { started: null, completed: null, url: null }
+decisions:
+  - text: "STORY-27 will implement on existing branch feat/STORY-27/graceful-fallback-redis-unavailable where spec and plan already exist"
+    date: "2026-06-24"
+  - text: "Recovery worker modelled as pair of methods on RedisClient itself (per OQ-1 resolution in plan)"
+    date: "2026-06-24"
+  - text: "DB readiness check in /ready deferred (per OQ-2 resolution in plan)"
+    date: "2026-06-24"
+  - text: "redis_degraded gauge is binary (0/1) with no reason label (per OQ-3 resolution in plan)"
+    date: "2026-06-24"
+  - text: "RedisDegraded alert severity is warning (per OQ-4 resolution in plan)"
+    date: "2026-06-24"
+open_questions: []
+blockers: []
+notes:
+  - text: "Spec and plan were pre-written. Skipping clarify_scope, specification, test_planning, delivery_planning phases."
+    type: info
+    date: "2026-06-24"
+  - text: "Backlog needs STORY-23 and STORY-24 marked as done before starting STORY-27"
+    type: info
+    date: "2026-06-24"
+  - text: "57 new tests added (3 health disabled, 6 redis client). Coverage at 81%."
+    type: info
+    date: "2026-06-24"
+  - text: "disabled_redis_app fixture overcomplicated `get_settings` patching; switched to `monkeypatch` per-test instead."
+    type: retro
+    date: "2026-06-24"

@@ -5,6 +5,7 @@ Provides fakeredis-based fixtures for cache tests, a test FastAPI application
 with overridden dependencies, and async HTTP test client via httpx.
 """
 
+import time
 from collections.abc import AsyncGenerator
 
 import fakeredis
@@ -55,6 +56,7 @@ async def app(fake_redis: fakeredis.FakeAsyncRedis) -> FastAPI:
 
     test_app.state.redis_client = redis_client
     test_app.state.cache_service = cache_service
+    test_app.state.started_at = time.time()
 
     return test_app
 
@@ -72,3 +74,5 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
