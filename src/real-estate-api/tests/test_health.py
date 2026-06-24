@@ -51,17 +51,15 @@ async def test_health_redis_degraded_when_unhealthy(client, app) -> None:  # typ
 
 @pytest.mark.asyncio
 async def test_health_redis_disabled_when_disabled(  # type: ignore[no-untyped-def]
-    disabled_redis_app, client
+    client, app, monkeypatch
 ) -> None:
     """When REDIS_ENABLED=False, health reports redis: disabled."""
-    # Need a client connected to the disabled_redis_app
-    from httpx import ASGITransport, AsyncClient
-
-    transport = ASGITransport(app=disabled_redis_app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/health")
-        body = response.json()
-        assert body["redis"] == "disabled"
+    disabled_settings = Settings(REDIS_ENABLED=False)
+    monkeypatch.setattr("app.routers.health.get_settings", lambda: disabled_settings)
+    app.state.redis_client.healthy = False
+    response = await client.get("/health")
+    body = response.json()
+    assert body["redis"] == "disabled"
 
 
 # --- Readiness endpoint tests ---
@@ -109,36 +107,31 @@ async def test_ready_returns_503_after_grace_period(  # type: ignore[no-untyped-
 
 @pytest.mark.asyncio
 async def test_ready_returns_503_with_zero_grace(  # type: ignore[no-untyped-def]
-    client, app
+    client, app, monkeypatch
 ) -> None:
     """With ``REDIS_STARTUP_GRACE_PERIOD=0``, degraded returns 503 immediately."""
-    # Override the settings for this test
-    with patch.object(
-        type(app.state.redis_client._settings),
-        "REDIS_STARTUP_GRACE_PERIOD",
-        0,
-        create=True,
-    ):
-        app.state.redis_client.healthy = False
-        app.state.started_at = time.time()
-        response = await client.get("/ready")
-        assert response.status_code == 503
-        body = response.json()
-        assert body["ready"] is False
-        assert body["redis"] == "degraded"
+    # Patch the STARTUP GRACE PERIOD to 0
+    zero_grace_settings = Settings(REDIS_STARTUP_GRACE_PERIOD=0)
+    monkeypatch.setattr("app.routers.readiness.get_settings", lambda: zero_grace_settings)
+    app.state.redis_client.healthy = False
+    app.state.started_at = time.time()
+    response = await client.get("/ready")
+    assert response.status_code == 503
+    body = response.json()
+    assert body["ready"] is False
+    assert body["redis"] == "degraded"
 
 
 @pytest.mark.asyncio
 async def test_ready_returns_disabled_when_redis_disabled(  # type: ignore[no-untyped-def]
-    disabled_redis_app,
+    client, app, monkeypatch
 ) -> None:
     """``REDIS_ENABLED=False`` → 200, ready: true, redis: disabled."""
-    from httpx import ASGITransport, AsyncClient
-
-    transport = ASGITransport(app=disabled_redis_app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        response = await ac.get("/ready")
-        assert response.status_code == 200
-        body = response.json()
-        assert body["ready"] is True
-        assert body["redis"] == "disabled"
+    disabled_settings = Settings(REDIS_ENABLED=False)
+    monkeypatch.setattr("app.routers.readiness.get_settings", lambda: disabled_settings)
+    app.state.redis_client.healthy = False
+    response = await client.get("/ready")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ready"] is True
+    assert body["redis"] == "disabled"
