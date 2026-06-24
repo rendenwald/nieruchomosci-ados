@@ -10,6 +10,7 @@ from typing import cast
 import structlog
 from fastapi import APIRouter, Request
 
+from app.core.config import get_settings
 from app.services.redis_client import RedisClient
 
 logger = structlog.get_logger(__name__)
@@ -29,12 +30,17 @@ async def health_check(request: Request) -> dict[str, str]:
     Returns:
         A JSON object with:
         - ``status``: Overall service status (always ``"ok"`` if responding).
-        - ``redis``: ``"ok"`` if Redis is reachable, ``"degraded"`` otherwise.
+        - ``redis``: ``"ok"`` if Redis is reachable, ``"degraded"`` otherwise,
+          or ``"disabled"`` if Redis is explicitly disabled via config.
 
     """
+    settings = get_settings()
     redis_client = _get_redis_client(request)
 
-    redis_status = "ok" if redis_client.healthy else "degraded"
+    if not settings.REDIS_ENABLED:
+        redis_status = "disabled"
+    else:
+        redis_status = "ok" if redis_client.healthy else "degraded"
 
     return {
         "status": "ok",
