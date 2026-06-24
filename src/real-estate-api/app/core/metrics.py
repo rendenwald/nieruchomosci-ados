@@ -58,3 +58,8 @@ cache_entry_size_bytes: Gauge = Gauge(
     "Size of cached response payload in bytes (sampled)",
     ["endpoint"],
 )
+
+redis_degraded: Gauge = Gauge(
+    "redis_degraded",
+    "Redis cache layer degraded (1) or healthy/disabled (0)",
+)
