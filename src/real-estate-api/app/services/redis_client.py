@@ -36,7 +36,7 @@ class RedisClient:
         self.failure_count: int = 0
         self._settings = get_settings()
         self._log = logger.bind(service="redis")
-        self._recovery_task: asyncio.Task | None = None
+        self._recovery_task: asyncio.Task[None] | None = None
 
     async def connect(self) -> None:
         """Create the Redis connection pool and verify connectivity.
@@ -76,7 +76,7 @@ class RedisClient:
                 recovery_worker_active=True,
             )
 
-        self._start_recovery_worker()
+        await self._start_recovery_worker()
 
     async def disconnect(self) -> None:
         """Stop the recovery worker and close the Redis connection pool."""
