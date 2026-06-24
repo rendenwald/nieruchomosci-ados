@@ -278,7 +278,7 @@ async def test_ping_failure_threshold_triggers_degraded() -> None:
     client._settings = mock_settings
 
     # Make fakeredis raise an error on ping
-    async def failing_ping() -> None:  # type: ignore[misc]
+    async def failing_ping() -> None:
         msg = "Connection refused"
         raise OSError(msg)
 
