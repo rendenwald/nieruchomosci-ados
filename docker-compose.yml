@@ -128,6 +128,36 @@ services:
     networks:
       - realestate-net
 
+  real-estate-api:
+    build:
+      context: .
+      dockerfile: src/real-estate-api/Dockerfile
+    container_name: realestate-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      REDIS_POOL_SIZE: "${REDIS_POOL_SIZE:-10}"
+      REDIS_TIMEOUT_SECONDS: "${REDIS_TIMEOUT_SECONDS:-2}"
+      REDIS_HEALTH_CHECK_INTERVAL: "${REDIS_HEALTH_CHECK_INTERVAL:-30}"
+      REDIS_HEALTH_CHECK_FAILURE_THRESHOLD: "${REDIS_HEALTH_CHECK_FAILURE_THRESHOLD:-3}"
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-realestate}"
+      DB_POOL_SIZE: "${DB_POOL_SIZE:-5}"
+      CACHE_TTL_SECONDS: "${CACHE_TTL_SECONDS:-120}"
+      CACHE_KEY_PREFIX: "${CACHE_KEY_PREFIX:-properties:list:v1}"
+      API_PREFIX: "${API_PREFIX:-/api/v1}"
+      PROPERTIES_MAX_LIMIT: "${PROPERTIES_MAX_LIMIT:-100}"
+      PROPERTIES_DEFAULT_LIMIT: "${PROPERTIES_DEFAULT_LIMIT:-20}"
+      METRICS_ENABLED: "${METRICS_ENABLED:-true}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - realestate-net
+
 volumes:
   postgres_data:
   redis_data:
