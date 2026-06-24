@@ -59,7 +59,7 @@
 | STORY-24 | Invalidate relevant cache keys on new property scrape | story | high | done | change |
 | STORY-25 | Cache `/api/v1/cities` response for 1 hour | story | medium | todo | change |
 | STORY-26 | Use Redis Streams for real-time alert delivery | story | medium | todo | change |
-| STORY-27 | Graceful fallback to direct DB query when Redis unavailable | story | high | todo | change |
+| STORY-27 | Graceful fallback to direct DB query when Redis unavailable | story | high | done | change |
 
 ## Epic 6: Photo Storage
 
@@ -116,6 +116,6 @@
 ## Stats
 
 - **Total items:** 52
-- **Todo:** 40
+- **Todo:** 39
 - **In progress:** 0
-- **Done:** 12
+- **Done:** 13
