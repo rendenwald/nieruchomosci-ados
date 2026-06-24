@@ -1,12 +1,17 @@
 """
-Tests for the health check endpoint.
+Tests for the health and readiness endpoints.
 
 Covers:
-- Health endpoint returns expected fields
-- Redis status reflects client health state
+- GET /health returns expected fields for ok/degraded/disabled states
+- GET /ready returns correct status codes for all Redis states and grace period
 """
 
+import time
+from unittest.mock import patch
+
 import pytest
+
+from app.core.config import Settings
 
 
 @pytest.mark.asyncio
@@ -42,3 +47,98 @@ async def test_health_redis_degraded_when_unhealthy(client, app) -> None:  # typ
     response = await client.get("/health")
     body = response.json()
     assert body["redis"] == "degraded"
+
+
+@pytest.mark.asyncio
+async def test_health_redis_disabled_when_disabled(  # type: ignore[no-untyped-def]
+    disabled_redis_app, client
+) -> None:
+    """When REDIS_ENABLED=False, health reports redis: disabled."""
+    # Need a client connected to the disabled_redis_app
+    from httpx import ASGITransport, AsyncClient
+
+    transport = ASGITransport(app=disabled_redis_app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/health")
+        body = response.json()
+        assert body["redis"] == "disabled"
+
+
+# --- Readiness endpoint tests ---
+
+
+@pytest.mark.asyncio
+async def test_ready_returns_200_when_healthy(client) -> None:  # type: ignore[no-untyped-def]
+    """``healthy=True`` → 200, ready: true, redis: ok."""
+    response = await client.get("/ready")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ready"] is True
+    assert body["redis"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_ready_returns_degraded_when_unhealthy(  # type: ignore[no-untyped-def]
+    client, app
+) -> None:
+    """Degraded + within grace period → 200, ready: true, redis: degraded."""
+    app.state.redis_client.healthy = False
+    # Ensure we're within the grace period
+    app.state.started_at = time.time()
+    response = await client.get("/ready")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ready"] is True
+    assert body["redis"] == "degraded"
+
+
+@pytest.mark.asyncio
+async def test_ready_returns_503_after_grace_period(  # type: ignore[no-untyped-def]
+    client, app
+) -> None:
+    """Degraded + past grace period → 503, ready: false, redis: degraded."""
+    app.state.redis_client.healthy = False
+    # Set started_at far in the past to exceed grace period
+    app.state.started_at = time.time() - 60  # 60 seconds ago > 30s grace
+    response = await client.get("/ready")
+    assert response.status_code == 503
+    body = response.json()
+    assert body["ready"] is False
+    assert body["redis"] == "degraded"
+
+
+@pytest.mark.asyncio
+async def test_ready_returns_503_with_zero_grace(  # type: ignore[no-untyped-def]
+    client, app
+) -> None:
+    """With ``REDIS_STARTUP_GRACE_PERIOD=0``, degraded returns 503 immediately."""
+    # Override the settings for this test
+    with patch.object(
+        type(app.state.redis_client._settings),
+        "REDIS_STARTUP_GRACE_PERIOD",
+        0,
+        create=True,
+    ):
+        app.state.redis_client.healthy = False
+        app.state.started_at = time.time()
+        response = await client.get("/ready")
+        assert response.status_code == 503
+        body = response.json()
+        assert body["ready"] is False
+        assert body["redis"] == "degraded"
+
+
+@pytest.mark.asyncio
+async def test_ready_returns_disabled_when_redis_disabled(  # type: ignore[no-untyped-def]
+    disabled_redis_app,
+) -> None:
+    """``REDIS_ENABLED=False`` → 200, ready: true, redis: disabled."""
+    from httpx import ASGITransport, AsyncClient
+
+    transport = ASGITransport(app=disabled_redis_app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        response = await ac.get("/ready")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ready"] is True
+        assert body["redis"] == "disabled"
