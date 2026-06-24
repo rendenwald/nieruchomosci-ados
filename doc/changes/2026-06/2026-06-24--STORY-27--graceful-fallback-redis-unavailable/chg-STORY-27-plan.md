@@ -580,10 +580,10 @@ Update the change plan revision log.
 
 | Phase | Status | Started | Completed | Commit | Notes |
 |-------|--------|---------|-----------|--------|-------|
-| 1 — Configuration | ⬜ Pending | — | — | — | — |
-| 2 — RedisClient recovery worker | ⬜ Pending | — | — | — | — |
-| 3 — Metrics gauge | ⬜ Pending | — | — | — | — |
-| 4 — Readiness endpoint | ⬜ Pending | — | — | — | — |
-| 5 — Prometheus alert rule | ⬜ Pending | — | — | — | — |
-| 6 — Tests | ⬜ Pending | — | — | — | — |
-| 7 — Code review & finalize | ⬜ Pending | — | — | — | — |
+| 1 — Configuration | ✅ Done | 2026-06-24 | 2026-06-24 | `0b5614e` | Added `REDIS_ENABLED` and `REDIS_STARTUP_GRACE_PERIOD` config |
+| 2 — RedisClient recovery worker | ✅ Done | 2026-06-24 | 2026-06-24 | `6bc404c` | Recovery worker, reconnect, REDIS_ENABLED support, main.py simplified |
+| 3 — Metrics gauge | ✅ Done | 2026-06-24 | 2026-06-24 | `bcfde69` | Added `redis_degraded` Prometheus gauge |
+| 4 — Readiness endpoint | ✅ Done | 2026-06-24 | 2026-06-24 | `6bc404c` | `GET /ready`, health disabled state, registered in main.py |
+| 5 — Prometheus alert rule | ✅ Done | 2026-06-24 | 2026-06-24 | `0c7e605` | Added `RedisDegraded` alert group |
+| 6 — Tests | ✅ Done | 2026-06-24 | 2026-06-24 | `632a48d`, `c67159a` | 59 tests, 81% coverage, all passing |
+| 7 — Code review & finalize | ✅ Done | 2026-06-24 | 2026-06-24 | `3296df9` | ruff clean, mypy clean, pytest 59/59, coverage 81% |
