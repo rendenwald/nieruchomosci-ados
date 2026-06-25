@@ -1,0 +1,30 @@
+# ──────────────────────────────────────────────────────────────────────────
+# Preview Cleanup — Real Estate Aggregation Platform
+#
+# Cleans up preview deployment when a PR is closed/merged.
+# Deletes the preview namespace and GHCR image tag.
+#
+# Triggered on: PR closed
+# ──────────────────────────────────────────────────────────────────────────
+
+name: Preview Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete preview namespace
+        run: |
+          kubectl delete namespace "preview-${{ github.event.number }}" --ignore-not-found
+
+      - name: Delete PR GHCR image tag
+        run: |
+          gh api --method DELETE \
+            "/orgs/rendenwald/packages/container/nieruchomosci-ados/tags/pr-${{ github.event.number }}" \
+            --silent || echo "Tag not found, skipping"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

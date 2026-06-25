@@ -1,0 +1,24 @@
+change_id: STORY-22
+title: "Run full test suite and preview deploy on PR"
+phases:
+  clarify_scope: { started: "2026-06-25T21:45:00Z", completed: "2026-06-25T21:47:00Z" }
+  specification: { started: "2026-06-25T21:47:00Z", completed: "2026-06-25T21:50:00Z" }
+  test_planning: { started: "2026-06-25T21:50:00Z", completed: "2026-06-25T21:50:00Z" }
+  delivery_planning: { started: "2026-06-25T21:50:00Z", completed: "2026-06-25T21:50:00Z" }
+  delivery: { started: "2026-06-25T21:50:00Z", completed: "2026-06-25T21:52:00Z" }
+  system_spec_update: { started: null, completed: null }
+  review_fix: { started: null, completed: null }
+  quality_gates: { started: null, completed: null }
+  dod_check: { started: null, completed: null }
+  pr_creation: { started: null, completed: null, url: null }
+decisions:
+  - text: "Full test suite already runs on PRs via quality job (ruff, mypy, pytest) — no change needed"
+    date: "2026-06-25"
+  - text: "Preview deploy requires a running k3s cluster. Create workflow stub with PR-comment URL and cleanup-on-close trigger"
+    date: "2026-06-25"
+open_questions: []
+blockers: []
+notes:
+  - text: "STORY-22 is the final Epic 04 story. Preview deploy is k8s-dependent; creating documented workflow stub."
+    type: info
+    date: "2026-06-25"
