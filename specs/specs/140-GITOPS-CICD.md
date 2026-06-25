@@ -4,7 +4,7 @@
 - **Version:** 2.1
 - **Status:** ready
 - **Dependencies:** 020-ARCHITECTURE.md
-- **AI Context:** Complete CI/CD pipeline with GitHub Actions, ArgoCD, Gitea Registry, and Kubernetes manifests. Implements Epic 4 (CI-1 through CI-5).
+- **AI Context:** Complete CI/CD pipeline with GitHub Actions, ArgoCD, GitHub Container Registry (GHCR), and Kubernetes manifests. Implements Epic 4 (CI-1 through CI-5).
 
 ---
 
@@ -25,8 +25,8 @@ flowchart TD
         LINT --> TEST[pytest coverage >= 80%]
         TEST --> BUILD[Docker Build multi-stage]
         BUILD --> SCAN[Trivy security scan]
-        SCAN --> PUSH[Push image gitea.local/scrapers/gratka:v1.0.0]
-        PUSH --> MANIFEST[Update k8s manifest image: gitea.local/...]
+        SCAN --> PUSH[Push image ghcr.io/rendenwald/gratka:v1.0.0]
+        PUSH --> MANIFEST[Update k8s manifest image: ghcr.io/rendenwald/...]
     end
 
     subgraph GITOPS["ArgoCD GitOps"]
@@ -74,17 +74,23 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Build Docker image
-        run: docker build -t gitea.local/${{ github.repository }}:${{ github.sha }} .
+        run: docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
       - name: Trivy security scan
         uses: aquasecurity/trivy-action@master
         with:
           exit-code: '1'
           severity: 'CRITICAL'
-      - name: Push to Gitea Registry
-        run: docker push gitea.local/${{ github.repository }}:${{ github.sha }}
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push to GHCR
+        run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
       - name: Update k8s manifests
         run: |
-          sed -i "s|image:.*|image: gitea.local/${{ github.repository }}:${{ github.sha }}|" \
+          sed -i "s|image:.*|image: ghcr.io/${{ github.repository }}:${{ github.sha }}|" \
             k8s/app/fastapi-deployment.yaml
           git commit -am "ci: update image to ${{ github.sha }}"
           git push
@@ -180,7 +186,7 @@ Every Deployment and CronJob manifest must carry a `rollback` annotation with th
 metadata:
   annotations:
     kubectl.kubernetes.io/last-applied-configuration: ""   # managed by ArgoCD
-    bigpickle/previous-image: "gitea.local/scrapers/otodom:{{ previous_sha }}"
+    bigpickle/previous-image: "ghcr.io/rendenwald/otodom:{{ previous_sha }}"
 ```
 
 ArgoCD rollback one-liner (add to runbook):
@@ -191,7 +197,7 @@ argocd app rollback <app-name> --revision <previous-revision>
 Manual image pin rollback:
 ```bash
 kubectl set image cronjob/otodom-scrapper \
-  otodom=gitea.local/scrapers/otodom:<previous_sha> -n scrapers-ns
+  otodom=ghcr.io/rendenwald/otodom:<previous_sha> -n scrapers-ns
 ```
 
 ## FIX-13: AGENTS.md verification checklist additions

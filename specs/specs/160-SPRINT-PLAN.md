@@ -22,7 +22,7 @@ gantt
     section Sprint 2: Refactor scrapers
     Refactor otodom-scrapper         :2026-06-30, 4d
     Refactor nieruchomosci-online    :2026-07-04, 4d
-    GitOps setup (Gitea + ArgoCD)    :2026-07-08, 3d
+    GitOps setup (GHCR + ArgoCD)     :2026-07-08, 3d
 
     section Sprint 3: Deduplication
     Blocking + heuristics            :2026-07-14, 4d

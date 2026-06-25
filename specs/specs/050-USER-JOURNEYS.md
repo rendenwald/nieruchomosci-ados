@@ -35,8 +35,8 @@ git push origin feature/gratka-spider
   │ ✅ GitHub Actions: lint → test → build image
   ▼
 [5. Merge to main]
-CI builds Docker image → pushes to Gitea Registry
-  │ ✅ Image: gitea.local/scrapers/gratka:v1.0.0
+CI builds Docker image → pushes to GHCR
+  │ ✅ Image: ghcr.io/rendenwald/gratka:v1.0.0
   ▼
 [6. ArgoCD auto-deploy]
 ArgoCD detects new image → deploy CronJob to k8s

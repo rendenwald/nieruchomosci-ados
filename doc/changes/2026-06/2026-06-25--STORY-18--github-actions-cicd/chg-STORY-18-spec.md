@@ -18,7 +18,7 @@ development and risks regressions reaching production.
 | In scope | Out of scope |
 |----------|-------------|
 | `.github/workflows/ci.yml` — one workflow for the monorepo | ArgoCD deployment (STORY-20) |
-| Ruff lint for both `src/real-estate-api` and `src/scrapper-base` | Docker image push to Gitea Registry (STORY-19) |
+| Ruff lint for both `src/real-estate-api` and `src/scrapper-base` | Docker image push to GHCR (STORY-19) |
 | mypy type check for both projects | k8s manifest updates |
 | pytest for both projects | Trivy security scan |
 | Docker build for `real-estate-api` | Auto-rollback (STORY-21) |

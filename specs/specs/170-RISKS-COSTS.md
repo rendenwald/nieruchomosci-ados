@@ -31,7 +31,7 @@
 |-----------|-------------|
 | VPS (Hetzner AX41, 32GB) | ~60 EUR |
 | Cloudflare Free | 0 EUR |
-| Gitea self-hosted | 0 EUR |
+| GHCR | 0 EUR |
 | PostgreSQL OSS | 0 EUR |
 | Redis OSS | 0 EUR |
 | MinIO OSS | 0 EUR |

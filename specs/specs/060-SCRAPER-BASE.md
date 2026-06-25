@@ -18,7 +18,7 @@
 ## Repository Structure
 
 ```
-scrapper-base/                     ← pip package (private PyPI / Gitea)
+scrapper-base/                     ← pip package (private PyPI / GHCR)
 ├── scraper_base/
 │   ├── __init__.py
 │   ├── database.py               ← PostgreSQL + PostGIS connection
