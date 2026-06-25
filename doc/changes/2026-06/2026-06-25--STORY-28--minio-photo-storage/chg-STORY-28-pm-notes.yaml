@@ -1,0 +1,28 @@
+change_id: STORY-28
+title: "Store scraped photos in MinIO with deduplication"
+phases:
+  clarify_scope: { started: "2026-06-25T22:00:00Z", completed: "2026-06-25T22:05:00Z" }
+  specification: { started: "2026-06-25T22:05:00Z", completed: "2026-06-25T22:08:00Z" }
+  test_planning: { started: "2026-06-25T22:08:00Z", completed: null }
+  delivery_planning: { started: null, completed: null }
+  delivery: { started: null, completed: null }
+  system_spec_update: { started: null, completed: null }
+  review_fix: { started: null, completed: null }
+  quality_gates: { started: null, completed: null }
+  dod_check: { started: null, completed: null }
+  pr_creation: { started: null, completed: null, url: null }
+decisions:
+  - text: "Use httpx for async HTTP downloads (modern, well-maintained, async-native)"
+    date: "2026-06-25"
+  - text: "Photo processing happens in BasePipeline._process_photos() after property upsert"
+    date: "2026-06-25"
+  - text: "MAX_PHOTOS_PER_PROPERTY=20 enforced before download (per 070-DATABASE.md)"
+    date: "2026-06-25"
+  - text: "MinIO SHA256 dedup is already built into upload_photo() — no additional dedup logic needed"
+    date: "2026-06-25"
+open_questions: []
+blockers: []
+notes:
+  - text: "MinIO storage client already exists. Need to add photo downloading from URLs and integrate into pipeline's process_item()."
+    type: info
+    date: "2026-06-25"

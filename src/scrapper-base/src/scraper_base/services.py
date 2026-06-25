@@ -338,6 +338,53 @@ class PropertyService:
 
         return new_property, True
 
+    async def update_photos(
+        self,
+        source_id: str,
+        portal_source: str,
+        photos: list[dict[str, Any]],
+    ) -> None:
+        """Append photo metadata to a property's photos JSONB column.
+
+        Merges the new ``photos`` list into the existing ``photos`` field.
+        Old entries (original ``url`` matches) are replaced; new ones are
+        appended.
+
+        Args:
+            source_id: The source-specific identifier.
+            portal_source: The portal source (e.g. ``"otodom"``).
+            photos: List of photo metadata dicts with at least ``path``,
+                ``url``, and ``order`` keys.
+
+        """
+        if not photos:
+            return
+
+        existing = await self.get_by_source(portal_source, source_id)
+        if existing is None:
+            return
+
+        existing_photos: list[dict[str, Any]] = []
+        if isinstance(existing.photos, list):
+            existing_photos = list(existing.photos)
+        elif isinstance(existing.photos, dict):
+            existing_photos = [existing.photos]
+
+        # Replace entries with matching URLs, append new ones
+        new_urls = {np["url"] for np in photos}
+        merged = [p for p in existing_photos if p.get("url") not in new_urls]
+        merged.extend(photos)
+
+        stmt = (
+            sa_update(Property)
+            .where(
+                Property.portal_source == portal_source,
+                Property.source_id == source_id,
+            )
+            .values(photos=merged)
+        )
+        await self.session.execute(stmt)
+
     async def get_by_source(
         self,
         portal: str,
