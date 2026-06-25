@@ -88,7 +88,7 @@ async def test_recovery_worker_starts_on_connect() -> None:
     client._redis = fake_redis
     client._pool = fake_redis.connection_pool
     client.healthy = True
-    await client._start_recovery_worker()
+    client._start_recovery_worker()
     assert client._recovery_task is not None
     assert not client._recovery_task.done()
     # Clean up
@@ -103,7 +103,7 @@ async def test_recovery_worker_stops_on_disconnect() -> None:
     client._redis = fake_redis
     client._pool = fake_redis.connection_pool
     client.healthy = True
-    await client._start_recovery_worker()
+    client._start_recovery_worker()
     assert client._recovery_task is not None
     await client._stop_recovery_worker()
     assert client._recovery_task is None or client._recovery_task.done()
@@ -138,7 +138,7 @@ async def test_recovery_worker_idles_when_healthy() -> None:
     client = RedisClient()
     client._redis = fake_redis
     client.healthy = True
-    await client._start_recovery_worker()
+    client._start_recovery_worker()
     # Give the task a moment to enter the sleep
     await asyncio.sleep(0.05)
     assert client._recovery_task is not None
