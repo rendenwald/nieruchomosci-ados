@@ -1,0 +1,30 @@
+change_id: STORY-20
+title: "ArgoCD auto-sync deployment on image push"
+phases:
+  clarify_scope: { started: "2026-06-25T21:00:00Z", completed: "2026-06-25T21:05:00Z" }
+  specification: { started: "2026-06-25T21:05:00Z", completed: "2026-06-25T21:10:00Z" }
+  test_planning: { started: "2026-06-25T21:10:00Z", completed: "2026-06-25T21:10:00Z" }
+  delivery_planning: { started: "2026-06-25T21:10:00Z", completed: "2026-06-25T21:12:00Z" }
+  delivery: { started: "2026-06-25T21:12:00Z", completed: "2026-06-25T21:15:00Z" }
+  system_spec_update: { started: null, completed: null }
+  review_fix: { started: null, completed: null }
+  quality_gates: { started: null, completed: null }
+  dod_check: { started: null, completed: null }
+  pr_creation: { started: null, completed: null, url: null }
+decisions:
+  - text: "Use App of Apps pattern per spec: app-of-apps.yaml in gitops-ns watches k8s/argocd/applications/ directory"
+    date: "2026-06-25"
+  - text: "App namespace: app-ns; GitOps namespace: gitops-ns (matching spec convention)"
+    date: "2026-06-25"
+  - text: "1 replica for FastAPI deployment (matching spec 140-GITOPS-CICD.md)"
+    date: "2026-06-25"
+  - text: "Manifest update commit uses [skip ci] to prevent infinite CI loop"
+    date: "2026-06-25"
+  - text: "Resource limits: 256m CPU / 512Mi memory; requests: 128m / 256Mi"
+    date: "2026-06-25"
+open_questions: []
+blockers: []
+notes:
+  - text: "Starting STORY-20 — ArgoCD auto-sync. This requires creating k8s manifests from scratch (Deployment, Service, Namespace, ArgoCD Application)."
+    type: info
+    date: "2026-06-25"
