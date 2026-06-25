@@ -56,6 +56,16 @@ class Settings(BaseSettings):
     PROPERTIES_MAX_LIMIT: int = 100
     PROPERTIES_DEFAULT_LIMIT: int = 20
 
+    # Redis Streams
+    REDIS_STREAM_NEW_PROPERTY: str = "stream:new_property"
+    REDIS_STREAM_ALERTS_PENDING: str = "stream:alerts:pending"
+    REDIS_STREAM_DEAD_LETTER: str = "stream:dead_letter"
+    REDIS_STREAM_CONSUMER_GROUP: str = "alert-workers"
+    REDIS_STREAM_MAXLEN_NEW_PROPERTY: int = 10_000
+    REDIS_STREAM_MAXLEN_DEAD_LETTER: int = 1_000
+    REDIS_STREAM_MAX_RETRIES: int = 3
+    REDIS_STREAM_POLL_TIMEOUT: int = 5
+
     # Observability
     METRICS_ENABLED: bool = True
 

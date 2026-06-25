@@ -16,6 +16,7 @@ from app.core.config import get_settings
 from app.routers import cities, health, properties, readiness
 from app.services.cache_service import CacheService
 from app.services.redis_client import RedisClient
+from app.workers.alert_worker import AlertWorker
 
 logger = structlog.get_logger(__name__)
 
@@ -28,8 +29,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         - Record startup timestamp for readiness grace period.
         - Initialise Redis connection pool.
         - Attach ``RedisClient`` and ``CacheService`` to ``app.state``.
+        - Start the AlertWorker background consumer.
         - Log application startup with version info.
     On shutdown:
+        - Stop the AlertWorker background consumer.
         - Close Redis connection pool (recovery worker is stopped inside
           ``disconnect()``).
 
@@ -51,17 +54,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app.state.redis_client = redis_client
         app.state.cache_service = cache_service
 
+    # Start Alert Worker background consumer
+    alert_worker = AlertWorker(redis_client)
+    await alert_worker.start()
+    app.state.alert_worker = alert_worker
+
     logger.info(
         "Application startup",
         version=app.version,
         api_prefix=settings.API_PREFIX,
         redis_healthy=redis_client.healthy,
         redis_enabled=settings.REDIS_ENABLED,
+        alert_worker_started=alert_worker._running,  # noqa: SLF001
     )
 
     yield
 
-    # Shutdown: clean up resources
+    # Shutdown: stop workers first, then clean up resources
+    await alert_worker.stop()
     await redis_client.disconnect()
     logger.info("Application shutdown")
 
