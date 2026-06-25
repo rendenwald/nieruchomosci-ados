@@ -48,8 +48,8 @@
 | STORY-18 | Run tests, lint, build Docker image on push to main | story | high | done | change |
 | STORY-19 | Push built image to GHCR (GitHub Container Registry) | story | medium | done | change |
 | STORY-20 | ArgoCD auto-sync deployment on image push | story | medium | done | change |
-| STORY-21 | Auto-rollback to previous version on deploy failure | story | low | todo | change |
-| STORY-22 | Run full test suite and preview deploy on PR | story | medium | todo | change |
+| STORY-21 | Auto-rollback to previous version on deploy failure | story | low | done | change |
+| STORY-22 | Run full test suite and preview deploy on PR | story | medium | done | change |
 
 ## Epic 5: Redis Cache
 
@@ -65,7 +65,7 @@
 
 | ID | Title | Type | Priority | Status | Labels |
 |----|-------|------|----------|--------|--------|
-| STORY-28 | Store scraped photos in MinIO with deduplication | story | high | todo | change |
+| STORY-28 | Store scraped photos in MinIO with deduplication | story | high | done | change |
 | STORY-29 | Serve photos via CDN-friendly URL with cache headers | story | medium | todo | change |
 | STORY-30 | Validate, resize and store user-uploaded photos in MinIO | story | medium | todo | change |
 | STORY-31 | Generate thumbnail (400x300) automatically on photo store | story | medium | todo | change |
@@ -116,6 +116,6 @@
 ## Stats
 
 - **Total items:** 52
-- **Todo:** 34
+- **Todo:** 32
 - **In progress:** 0
-- **Done:** 18
+- **Done:** 20

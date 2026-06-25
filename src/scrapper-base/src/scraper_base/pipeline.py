@@ -12,6 +12,8 @@ import uuid
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
+import httpx
+
 from scraper_base.database import (
     create_async_engine,
     create_session_factory,
@@ -27,7 +29,7 @@ from scraper_base.metrics import (
     set_active_listings,
 )
 from scraper_base.services import PropertyService, ScraperRunService
-from scraper_base.storage import MinioStorageClient
+from scraper_base.storage import MAX_PHOTOS_PER_PROPERTY, MinioStorageClient
 
 if TYPE_CHECKING:
     from scrapy import Spider  # noqa: TC004  # Imported only for type hints
@@ -93,6 +95,107 @@ class BasePipeline(ABC):
 
         """
         ...
+
+    # ------------------------------------------------------------------
+    # Photo processing
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _extract_photo_urls(data: dict[str, Any]) -> list[str]:
+        """Extract photo URLs from a property data dict.
+
+        Looks for a ``photos`` key containing a list of dicts with a
+        ``url`` key, or a list of plain URL strings.
+
+        Args:
+            data: The property data dict from ``item_to_data()``.
+
+        Returns:
+            A list of photo URL strings (max ``MAX_PHOTOS_PER_PROPERTY``).
+
+        """
+        raw = data.get("photos")
+        if not raw:
+            return []
+        if isinstance(raw, list):
+            urls: list[str] = []
+            for entry in raw[:MAX_PHOTOS_PER_PROPERTY]:
+                if isinstance(entry, str):
+                    urls.append(entry)
+                elif isinstance(entry, dict):
+                    url = entry.get("url")
+                    if isinstance(url, str):
+                        urls.append(url)
+            return urls
+        return []
+
+    async def _process_photos(
+        self,
+        data: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Download photos from URLs and upload them to MinIO.
+
+        Args:
+            data: The property data dict with optional ``photos`` key.
+
+        Returns:
+            A list of photo metadata dicts with MinIO ``path``, original
+            ``url``, and ``order`` keys. Empty list if no photos or MinIO
+            unavailable.
+
+        """
+        if self._minio is None or not self._minio.is_available:
+            self.logger.debug("MinIO unavailable, skipping photo upload")
+            return []
+
+        photo_urls = self._extract_photo_urls(data)
+        if not photo_urls:
+            return []
+
+        results: list[dict[str, Any]] = []
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for url in photo_urls:
+                try:
+                    response = await client.get(url, follow_redirects=True)
+                    response.raise_for_status()
+                    object_name = await self._minio.upload_photo(response.content)
+                    if object_name:
+                        results.append({
+                            "path": object_name,
+                            "url": url,
+                            "order": len(results) + 1,
+                        })
+                        self.logger.debug(
+                            "Photo uploaded to MinIO",
+                            url=url,
+                            object_name=object_name,
+                        )
+                except httpx.HTTPStatusError as exc:
+                    self.logger.warning(
+                        "Photo download HTTP error",
+                        url=url,
+                        status_code=exc.response.status_code,
+                    )
+                except httpx.RequestError as exc:
+                    self.logger.warning(
+                        "Photo download request failed",
+                        url=url,
+                        error=str(exc),
+                    )
+                except Exception:  # noqa: BLE001
+                    self.logger.exception(
+                        "Photo processing failed",
+                        url=url,
+                    )
+
+        if results:
+            self.logger.info(
+                "Photos stored in MinIO",
+                count=len(results),
+                total_urls=len(photo_urls),
+            )
+
+        return results
 
     # ------------------------------------------------------------------
     # Spider lifecycle
@@ -257,6 +360,16 @@ class BasePipeline(ABC):
                 self._items_new += 1
             else:
                 self._items_updated += 1
+
+            # Download photos and store in MinIO (non-blocking on failure)
+            if data.get("photos"):
+                photo_results = await self._process_photos(data)
+                if photo_results and self._property_service is not None:
+                    await self._property_service.update_photos(
+                        source_id=data["source_id"],
+                        portal_source=data["portal_source"],
+                        photos=photo_results,
+                    )
 
             # Pass through to Scrapy: convert dicts, leave Scrapy Items as-is
             if isinstance(item, dict):
