@@ -1,0 +1,61 @@
+# ──────────────────────────────────────────────────────────────────────────
+# Preview Deploy — Real Estate Aggregation Platform
+#
+# Builds a PR-specific Docker image and deploys it to a preview namespace.
+# Requires a running k3s cluster with kubectl configured.
+#
+# Triggered on: PR opened, synchronized (push to PR branch), reopened
+# Namespace: preview-{pr-number}
+# Image tag: pr-{pr-number}
+# ──────────────────────────────────────────────────────────────────────────
+
+name: Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build . \
+            -f src/real-estate-api/Dockerfile \
+            -t ghcr.io/rendenwald/nieruchomosci-ados:pr-${{ github.event.number }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push PR image to GHCR
+        run: |
+          docker push ghcr.io/rendenwald/nieruchomosci-ados:pr-${{ github.event.number }}
+
+      - name: Deploy to preview namespace
+        run: |
+          NAMESPACE="preview-${{ github.event.number }}"
+          kubectl create namespace "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl set image deployment/fastapi fastapi=ghcr.io/rendenwald/nieruchomosci-ados:pr-${{ github.event.number }} \
+            -n "${NAMESPACE}" 2>/dev/null || \
+          kubectl apply -f k8s/app/ -n "${NAMESPACE}"
+          kubectl set image deployment/fastapi fastapi=ghcr.io/rendenwald/nieruchomosci-ados:pr-${{ github.event.number }} \
+            -n "${NAMESPACE}"
+
+      - name: Comment preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const previewUrl = `http://preview-${{ github.event.number }}.localhost:8000`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 Preview deployed: ${previewUrl}\n\nImage: \`ghcr.io/rendenwald/nieruchomosci-ados:pr-${{ github.event.number }}\``
+            });
