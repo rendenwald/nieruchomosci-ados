@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from scraper_base.cache_invalidator import CacheInvalidator
 from scraper_base.models import Agency, Property, ScraperRun, ScraperRunStatus
+from scraper_base.stream_publisher import StreamPublisher
 
 logger = structlog.get_logger(__name__)
 
@@ -161,14 +162,40 @@ class PropertyService:
         self,
         session: AsyncSession,
         cache_invalidator: CacheInvalidator | None = None,
+        stream_publisher: StreamPublisher | None = None,
     ) -> None:
         self.session = session
         self.cache_invalidator = cache_invalidator
+        self.stream_publisher = stream_publisher
         # Detect dialect once — immutable for the lifetime of the service.
         # PostgreSQL gets the atomic upsert path; SQLite uses the fallback.
         self._dialect: str = "sqlite"
         if session.bind is not None:
             self._dialect = session.bind.dialect.name
+
+    async def _publish_stream_event(self, property_obj: Property, is_new: bool) -> None:
+        """Fire-and-forget stream event publishing after upsert.
+
+        Never raises — exceptions are caught and logged.
+        """
+        if self.stream_publisher is None:
+            return
+        try:
+            await self.stream_publisher.publish_new_property(
+                property_id=property_obj.id,
+                portal_source=property_obj.portal_source,
+                source_id=property_obj.source_id,
+                city=property_obj.city or "",
+                property_type=property_obj.property_type,
+                price=property_obj.price,
+                is_new=is_new,
+            )
+        except Exception:
+            logger.exception(
+                "Stream publish failed (suppressed)",
+                property_id=property_obj.id,
+                is_new=is_new,
+            )
 
     async def _invalidate_cache(self, property_obj: Property, is_new: bool) -> None:
         """Fire-and-forget cache invalidation after upsert.
@@ -256,6 +283,9 @@ class PropertyService:
             # ── Post-upsert cache invalidation ─────────────────────────
             await self._invalidate_cache(property_obj, is_new)
 
+            # ── Post-upsert stream event ───────────────────────────────
+            await self._publish_stream_event(property_obj, is_new)
+
             return property_obj, is_new
 
         # ── SQLite fallback: SELECT-then-INSERT/UPDATE ───────────────────
@@ -278,6 +308,9 @@ class PropertyService:
             # ── Post-upsert cache invalidation ─────────────────────────
             await self._invalidate_cache(existing, False)
 
+            # ── Post-upsert stream event ───────────────────────────────
+            await self._publish_stream_event(existing, False)
+
             return existing, False
 
         # Insert new record with max(id)+1 fallback for SQLite
@@ -299,6 +332,9 @@ class PropertyService:
 
         # ── Post-upsert cache invalidation ─────────────────────────────
         await self._invalidate_cache(new_property, True)
+
+        # ── Post-upsert stream event ───────────────────────────────────
+        await self._publish_stream_event(new_property, True)
 
         return new_property, True
 
