@@ -1,0 +1,59 @@
+# ──────────────────────────────────────────────────────────────────────────
+# CI/CD Pipeline — Real Estate Aggregation Platform
+#
+# Runs on push to main and pull requests to main.
+# ── quality: lint + type check + test (both projects in parallel)
+# ── docker:  build real-estate-api image (main only, after quality)
+#
+# Depends on: uv (astral-sh/setup-uv@v3)
+# ──────────────────────────────────────────────────────────────────────────
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ["real-estate-api", "scrapper-base"]
+      fail-fast: true
+    defaults:
+      run:
+        working-directory: src/${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Type check (mypy)
+        run: uv run mypy . --strict
+
+      - name: Test (pytest)
+        run: uv run pytest -v
+
+  docker:
+    if: github.ref == 'refs/heads/main'
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build . \
+            -f src/real-estate-api/Dockerfile \
+            -t real-estate-api:${{ github.sha }} \
+            -t real-estate-api:latest
