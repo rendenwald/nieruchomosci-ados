@@ -72,7 +72,7 @@ graph TB
     subgraph CICD["🔄 GitOps / CI/CD"]
         GH[GitHub Actions<br/>CI Pipeline]
         ARGOCD[ArgoCD<br/>GitOps Deploy]
-        REG[Gitea Registry<br/>Docker Images]
+        REG[GHCR<br/>Docker Images]
     end
 
     CF --> CADDY
@@ -130,7 +130,7 @@ graph TB
 | ID | User Story (EARS) | Points |
 |----|-------------------|--------|
 | CI-1 | **When** code pushed to main, **shall** run tests, lint, build Docker image | 5 |
-| CI-2 | **When** image built, **shall** push to self-hosted Gitea registry | 3 |
+| CI-2 | **When** image built, **shall** push to GHCR (GitHub Container Registry) | 3 |
 | CI-3 | **When** image pushed, **shall** ArgoCD auto-sync deployment | 5 |
 | CI-4 | **When** deployment fails, **shall** auto-rollback to previous version | 5 |
 | CI-5 | **When** PR opened, **shall** run full test suite and preview deploy | 8 |
@@ -288,8 +288,8 @@ git push origin feature/gratka-spider
   │ ✅ GitHub Actions: lint → test → build image
   ▼
 [5. Merge do main]
-CI buduje Docker image → pushuje do Gitea Registry
-  │ ✅ Image: gitea.local/scrapers/gratka:v1.0.0
+CI buduje Docker image → pushuje do GHCR
+  │ ✅ Image: ghcr.io/rendenwald/gratka:v1.0.0
   ▼
 [6. ArgoCD auto-deploy]
 ArgoCD wykrywa nowy image → deploy CronJob do k8s
@@ -418,7 +418,7 @@ graph LR
             end
             subgraph "gitops-ns"
                 G1[ArgoCD<br/>1 replica]
-                G2[Gitea<br/>Git + Registry]
+                G2[GitHub + GHCR]
             end
         end
         LB[Caddy<br/>Load Balancer<br/>Auto HTTPS]
@@ -841,8 +841,8 @@ flowchart TD
         LINT --> TEST[pytest<br/>coverage >= 80%]
         TEST --> BUILD[Docker Build<br/>multi-stage]
         BUILD --> SCAN[Trivy<br/>security scan]
-        SCAN --> PUSH[Push image<br/>gitea.local/scrapers/gratka:v1.0.0]
-        PUSH --> MANIFEST[Update k8s manifest<br/>image: gitea.local/...]
+        SCAN --> PUSH[Push image<br/>ghcr.io/rendenwald/gratka:v1.0.0]
+        PUSH --> MANIFEST[Update k8s manifest<br/>image: ghcr.io/rendenwald/...]
     end
 
     subgraph GITOPS["ArgoCD GitOps"]
@@ -923,17 +923,17 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Build Docker image
-        run: docker build -t gitea.local/${{ github.repository }}:${{ github.sha }} .
+        run: docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
       - name: Trivy security scan
         uses: aquasecurity/trivy-action@master
         with:
           exit-code: '1'
           severity: 'CRITICAL'
-      - name: Push to Gitea Registry
-        run: docker push gitea.local/${{ github.repository }}:${{ github.sha }}
+      - name: Push to GHCR
+        run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
       - name: Update k8s manifests
         run: |
-          sed -i "s|image:.*|image: gitea.local/${{ github.repository }}:${{ github.sha }}|" \
+          sed -i "s|image:.*|image: ghcr.io/${{ github.repository }}:${{ github.sha }}|" \
             k8s/app/fastapi-deployment.yaml
           git commit -am "ci: update image to ${{ github.sha }}"
           git push
@@ -1349,7 +1349,7 @@ export interface ApiError {
 ```
 # Repozytoria (osobne Git repos)
 
-scrapper-base/                     ← pip package (PyPI prywatny / Gitea)
+scrapper-base/                     ← pip package (PyPI prywatny / GHCR)
 ├── scraper_base/
 │   ├── __init__.py
 │   ├── database.py               ← PostgreSQL + PostGIS connection
@@ -1463,7 +1463,7 @@ gantt
     section Sprint 2: Refaktor scraperów
     Refaktor otodom-scrapper         :2026-06-30, 4d
     Refaktor nieruchomosci-online    :2026-07-04, 4d
-    GitOps setup (Gitea + ArgoCD)    :2026-07-08, 3d
+    GitOps setup (GHCR + ArgoCD)     :2026-07-08, 3d
 
     section Sprint 3: Deduplikacja
     Blocking + heuristics            :2026-07-14, 4d
@@ -1521,7 +1521,7 @@ gantt
 |----------|-----------------|
 | VPS (Hetzner AX41, 32GB) | ~60 EUR |
 | Cloudflare Free | 0 EUR |
-| Gitea self-hosted | 0 EUR |
+| GHCR | 0 EUR |
 | PostgreSQL OSS | 0 EUR |
 | Redis OSS | 0 EUR |
 | MinIO OSS | 0 EUR |

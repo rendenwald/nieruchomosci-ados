@@ -56,7 +56,7 @@ graph TB
     subgraph CICD["GitOps / CI/CD"]
         GH[GitHub Actions CI Pipeline]
         ARGOCD[ArgoCD GitOps Deploy]
-        REG[Gitea Registry Docker Images]
+        REG[GHCR — GitHub Container Registry]
     end
 
     CF --> CADDY
@@ -86,7 +86,7 @@ graph TB
 | Cache | Redis 7 (maxmemory 1GB, no persist) | API cache, streams |
 | Storage | MinIO (standalone) | Photo storage, thumbnails |
 | Monitoring | Prometheus + Grafana + Loki (7d) | Metrics, dashboards, logs |
-| CI/CD | GitHub Actions + ArgoCD + Gitea | Automation, GitOps |
+| CI/CD | GitHub Actions + ArgoCD + GHCR | Automation, GitOps |
 | Infra | k3s single node (→ cluster) | Container orchestration |
 
 ---
@@ -133,7 +133,7 @@ Single k3s node (MVP) with namespaces:
 | `app-ns` | FastAPI (1 replica), SvelteKit (1 replica) |
 | `storage-ns` | PostgreSQL, Redis, MinIO |
 | `monitoring-ns` | Prometheus, Grafana, Loki, Alertmanager |
-| `gitops-ns` | ArgoCD, Gitea |
+| `gitops-ns` | ArgoCD |
 
 ### Local Development Ports
 

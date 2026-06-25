@@ -82,7 +82,7 @@ Each change creates artifacts in `doc/changes/<change-id>/`.
 | **Cache** | Redis 7 (maxmemory 1GB, allkeys-lru, no persist) | `120-CACHING-STORAGE.md` |
 | **Storage** | MinIO standalone — SHA256 dedup, 400x300 thumbnails | `120-CACHING-STORAGE.md` |
 | **Monitoring** | Prometheus + Grafana + Loki (7d) + Alertmanager | `130-MONITORING-ALERTS.md` |
-| **CI/CD** | GitHub Actions + ArgoCD + Gitea Registry | `140-GITOPS-CICD.md` |
+| **CI/CD** | GitHub Actions + ArgoCD + GHCR (GitHub Container Registry) | `140-GITOPS-CICD.md` |
 | **Infra** | k3s single node (→ cluster) | `020-ARCHITECTURE.md` |
 
 ---

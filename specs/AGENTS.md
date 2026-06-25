@@ -75,7 +75,7 @@ Step 5 — REFLECT
 | Cache | Redis 7 (maxmemory 1GB, allkeys-lru, no persist) | `120-CACHING-STORAGE.md` |
 | Storage | MinIO (standalone) — SHA256 dedup, thumbnails 400x300 | `120-CACHING-STORAGE.md` |
 | Monitoring | Prometheus + Grafana + Loki (7d retention) + Alertmanager | `130-MONITORING-ALERTS.md` |
-| CI/CD | GitHub Actions + ArgoCD + Gitea Registry | `140-GITOPS-CICD.md` |
+| CI/CD | GitHub Actions + ArgoCD + GHCR (GitHub Container Registry) | `140-GITOPS-CICD.md` |
 | Infrastructure | k3s single node (local simulation first) | `020-ARCHITECTURE.md` |
 
 ### Local Development Ports

@@ -11,6 +11,7 @@ Covers:
 """
 
 import json
+from typing import Any
 
 import pytest
 
@@ -94,7 +95,7 @@ async def test_process_with_retry_acks_on_success(app, fake_redis) -> None:  # t
     # Process the message (handler succeeds)
     processed_data = []
 
-    async def success_handler(payload: dict) -> None:
+    async def success_handler(payload: dict[str, Any]) -> None:
         processed_data.append(payload)
 
     await process_with_retry(
@@ -129,7 +130,7 @@ async def test_process_with_retry_moves_to_dead_letter(app, fake_redis) -> None:
 
     call_count = 0
 
-    async def failing_handler(payload: dict) -> None:
+    async def failing_handler(payload: dict[str, Any]) -> None:
         nonlocal call_count
         call_count += 1
         msg = "Handler failed"
@@ -174,7 +175,7 @@ async def test_process_with_retry_handler_not_called_when_redis_unhealthy(app) -
 
     handler_called = False
 
-    async def handler(payload: dict) -> None:
+    async def handler(payload: dict[str, Any]) -> None:
         nonlocal handler_called
         handler_called = True
 

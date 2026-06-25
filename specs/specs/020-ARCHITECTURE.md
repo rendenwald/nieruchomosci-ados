@@ -51,7 +51,7 @@ graph TB
     subgraph CICD["GitOps / CI/CD"]
         GH[GitHub Actions CI Pipeline]
         ARGOCD[ArgoCD GitOps Deploy]
-        REG[Gitea Registry Docker Images]
+        REG[GHCR — GitHub Container Registry]
     end
 
     CF --> CADDY
@@ -100,7 +100,7 @@ graph LR
             end
             subgraph "gitops-ns"
                 G1[ArgoCD 1 replica]
-                G2[Gitea Git + Registry]
+                G2[GitHub + GHCR]
             end
         end
         LB[Caddy Load Balancer Auto HTTPS]

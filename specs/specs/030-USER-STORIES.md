@@ -45,7 +45,7 @@
 | ID | User Story (EARS) | Points |
 |----|-------------------|--------|
 | CI-1 | **When** code pushed to main, **shall** run tests, lint, build Docker image | 5 |
-| CI-2 | **When** image built, **shall** push to self-hosted Gitea registry | 3 |
+| CI-2 | **When** image built, **shall** push to GHCR (GitHub Container Registry) | 3 |
 | CI-3 | **When** image pushed, **shall** ArgoCD auto-sync deployment | 5 |
 | CI-4 | **When** deployment fails, **shall** auto-rollback to previous version | 5 |
 | CI-5 | **When** PR opened, **shall** run full test suite and preview deploy | 8 |
