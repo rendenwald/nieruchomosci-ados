@@ -127,6 +127,8 @@ async def list_properties(
         key=cache_key,
         compute=query_db,
         ttl=settings.CACHE_TTL_SECONDS,
+        endpoint="properties",
+        key_prefix=settings.CACHE_KEY_PREFIX,
     )
 
     # ── Build response ──────────────────────────────────────────────────
