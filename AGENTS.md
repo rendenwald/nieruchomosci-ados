@@ -193,6 +193,7 @@ Before marking *any* task complete:
 [ ] AGENTS.md or README needs updating?
 [ ] Changes reversible without data migration?
 [ ] DB migration — does alembic downgrade -1 succeed?
+[ ] Previous image SHA noted in deployment annotation for fast rollback?
 [ ] New MV — unique index before REFRESH CONCURRENTLY?
 [ ] New CronJob — concurrencyPolicy: Forbid?
 [ ] New k8s Secret — secretKeyRef?

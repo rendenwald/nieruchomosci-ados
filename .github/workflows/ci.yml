@@ -72,6 +72,11 @@ jobs:
 
       - name: Update k8s manifest with new image SHA
         run: |
+          # Capture current image as previous-image for fast rollback
+          CURRENT_IMAGE=$(sed -n 's/.*image: ghcr.io\/rendenwald\/nieruchomosci-ados:\(.*\)/\1/p' \
+            k8s/app/fastapi-deployment.yaml | head -1)
+          sed -i "s|bigpickle/previous-image:.*|bigpickle/previous-image: \"ghcr.io/rendenwald/nieruchomosci-ados:${CURRENT_IMAGE}\"|" \
+            k8s/app/fastapi-deployment.yaml
           sed -i "s|image: ghcr.io/rendenwald/nieruchomosci-ados:.*|image: ghcr.io/rendenwald/nieruchomosci-ados:${{ github.sha }}|" \
             k8s/app/fastapi-deployment.yaml
 
