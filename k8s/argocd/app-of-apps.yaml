@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+  namespace: gitops-ns
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rendenwald/nieruchomosci-ados.git
+    targetRevision: main
+    path: k8s/argocd/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gitops-ns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi
+  namespace: app-ns
+  labels:
+    app: fastapi
+  annotations:
+    bigpickle/previous-image: "ghcr.io/rendenwald/nieruchomosci-ados:latest"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi
+  template:
+    metadata:
+      labels:
+        app: fastapi
+    spec:
+      containers:
+        - name: fastapi
+          image: ghcr.io/rendenwald/nieruchomosci-ados:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: config-secret
+                optional: true
+          resources:
+            requests:
+              cpu: 128m
+              memory: 256Mi
+            limits:
+              cpu: 256m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
