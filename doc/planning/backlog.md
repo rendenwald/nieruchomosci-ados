@@ -57,7 +57,7 @@
 |----|-------|------|----------|--------|--------|
 | STORY-23 | Serve `/api/v1/properties` from Redis cache (TTL 2min) | story | high | done | change |
 | STORY-24 | Invalidate relevant cache keys on new property scrape | story | high | done | change |
-| STORY-25 | Cache `/api/v1/cities` response for 1 hour | story | medium | in-progress | change |
+| STORY-25 | Cache `/api/v1/cities` response for 1 hour | story | medium | done | change |
 | STORY-26 | Use Redis Streams for real-time alert delivery | story | medium | todo | change |
 | STORY-27 | Graceful fallback to direct DB query when Redis unavailable | story | high | done | change |
 
@@ -116,6 +116,6 @@
 ## Stats
 
 - **Total items:** 52
-- **Todo:** 39
+- **Todo:** 38
 - **In progress:** 0
-- **Done:** 13
+- **Done:** 14
