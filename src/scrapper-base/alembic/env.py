@@ -9,6 +9,7 @@ import os
 from logging.config import fileConfig
 
 from sqlalchemy import pool
+from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
@@ -44,7 +45,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def do_run_migrations(connection):
+def do_run_migrations(connection: Connection) -> None:
     """Configure and run migrations on a given connection."""
     context.configure(
         connection=connection,

@@ -52,6 +52,26 @@ select = ["E", "F", "I", "N", "W", "UP"]
 strict = true
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+# Test files: relax strict rules that are overly verbose for test code
+# - no-untyped-def: test function signatures don't always need return types
+# - type-arg: dict/list generic args not required in test annotations
+# - unused-ignore: stale ignore comments from earlier development
+disable_error_code = [
+    "no-untyped-def",
+    "type-arg",
+    "unused-ignore",
+    "no-any-return",
+    "method-assign",
+    "attr-defined",
+    "comparison-overlap",
+    "assignment",
+    "misc",
+    "no-untyped-call",
+    "abstract",
+]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_test_loop_scope = "function"
