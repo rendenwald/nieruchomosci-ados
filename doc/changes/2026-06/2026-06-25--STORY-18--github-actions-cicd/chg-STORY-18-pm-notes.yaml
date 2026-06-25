@@ -1,0 +1,20 @@
+change_id: STORY-18
+title: "Run tests, lint, build Docker image on push to main"
+phases:
+  clarify_scope: { started: "2026-06-25T13:00:00Z", completed: "2026-06-25T13:10:00Z" }
+  specification: { started: "2026-06-25T13:15:00Z", completed: "2026-06-25T13:18:00Z" }
+  test_planning: { started: "2026-06-25T13:18:00Z", completed: "2026-06-25T13:18:00Z" }
+  delivery_planning: { started: "2026-06-25T13:18:00Z", completed: "2026-06-25T13:20:00Z" }
+  delivery: { started: "2026-06-25T13:20:00Z", completed: "2026-06-25T13:25:00Z" }
+  system_spec_update: { started: "2026-06-25T13:25:00Z", completed: "2026-06-25T13:25:00Z" }
+  review_fix: { started: "2026-06-25T13:25:00Z", completed: "2026-06-25T13:25:00Z" }
+  quality_gates: { started: "2026-06-25T13:25:00Z", completed: "2026-06-25T13:28:00Z" }
+  dod_check: { started: "2026-06-25T13:28:00Z", completed: "2026-06-25T13:28:00Z" }
+  pr_creation: { started: "2026-06-25T13:28:00Z", completed: "2026-06-25T13:28:00Z", url: null }
+decisions: []
+open_questions: []
+blockers: []
+notes:
+  - text: "Starting STORY-18 CI/CD pipeline setup"
+    type: info
+    date: "2026-06-25"

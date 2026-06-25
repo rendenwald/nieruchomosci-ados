@@ -45,7 +45,7 @@
 
 | ID | Title | Type | Priority | Status | Labels |
 |----|-------|------|----------|--------|--------|
-| STORY-18 | Run tests, lint, build Docker image on push to main | story | high | todo | change |
+| STORY-18 | Run tests, lint, build Docker image on push to main | story | high | done | change |
 | STORY-19 | Push built image to self-hosted Gitea registry | story | medium | todo | change |
 | STORY-20 | ArgoCD auto-sync deployment on image push | story | medium | todo | change |
 | STORY-21 | Auto-rollback to previous version on deploy failure | story | low | todo | change |
@@ -116,6 +116,6 @@
 ## Stats
 
 - **Total items:** 52
-- **Todo:** 37
+- **Todo:** 36
 - **In progress:** 0
-- **Done:** 15
+- **Done:** 16
