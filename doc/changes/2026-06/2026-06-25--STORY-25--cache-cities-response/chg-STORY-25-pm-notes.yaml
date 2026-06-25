@@ -1,0 +1,20 @@
+change_id: STORY-25
+title: "Cache /api/v1/cities response for 1 hour"
+phases:
+  clarify_scope: { started: "2026-06-25T10:00:00Z", completed: "2026-06-25T10:05:00Z" }
+  specification: { started: "2026-06-25T10:05:00Z", completed: "2026-06-25T10:10:00Z" }
+  test_planning: { started: "2026-06-25T10:10:00Z", completed: "2026-06-25T10:12:00Z" }
+  delivery_planning: { started: "2026-06-25T10:12:00Z", completed: "2026-06-25T10:15:00Z" }
+  delivery: { started: "2026-06-25T10:15:00Z", completed: "2026-06-25T10:35:00Z" }
+  system_spec_update: { started: "2026-06-25T10:35:00Z", completed: "2026-06-25T10:36:00Z" }
+  review_fix: { started: "2026-06-25T10:36:00Z", completed: "2026-06-25T10:38:00Z" }
+  quality_gates: { started: "2026-06-25T10:38:00Z", completed: "2026-06-25T10:40:00Z" }
+  dod_check: { started: "2026-06-25T10:40:00Z", completed: "2026-06-25T10:42:00Z" }
+  pr_creation: { started: "2026-06-25T10:42:00Z", completed: null, url: null }
+decisions: []
+open_questions: []
+blockers: []
+notes:
+  - text: "Requirements clear from specs 080-API.md and 120-CACHING-STORAGE.md. Existing pattern from properties.py can be reused. CacheService.get_or_compute() needs endpoint/key_prefix parameterization."
+    type: info
+    date: "2026-06-25"

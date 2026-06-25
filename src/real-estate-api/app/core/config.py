@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     # Cache
     CACHE_TTL_SECONDS: int = 120
     CACHE_KEY_PREFIX: str = "properties:list:v1"
+    CITIES_CACHE_TTL: int = 3600
+    CITIES_CACHE_KEY_PREFIX: str = "cities:list"
 
     # API
     API_PREFIX: str = "/api/v1"

@@ -31,14 +31,14 @@ class CacheService:
         self._redis = redis_client
         self._settings = get_settings()
         self._log = logger.bind(service="cache")
-        self._endpoint = "properties"
-        self._key_prefix = self._settings.CACHE_KEY_PREFIX
 
     async def get_or_compute(
         self,
         key: str,
         compute: Callable[[], Any],
         ttl: int | None = None,
+        endpoint: str = "properties",
+        key_prefix: str | None = None,
     ) -> tuple[str, str]:
         """Cache-aside read: return cached value or compute and store.
 
@@ -61,6 +61,9 @@ class CacheService:
             key: The cache key.
             compute: Async callable that returns the data to cache.
             ttl: Cache TTL in seconds. Defaults to ``CACHE_TTL_SECONDS``.
+            endpoint: Endpoint name for metrics labels.
+            key_prefix: Cache key prefix for metrics labels. Defaults to the
+                raw ``key`` if not provided.
 
         Returns:
             A tuple of ``(json_data: str, cache_status: str)`` where
@@ -69,13 +72,14 @@ class CacheService:
 
         """
         effective_ttl = ttl or self._settings.CACHE_TTL_SECONDS
+        effective_key_prefix = key_prefix or self._settings.CACHE_KEY_PREFIX
 
         # ── Degraded mode: skip Redis entirely ──────────────────────────
         if not self._redis.healthy:
             data = await compute()
             cache_misses_total.labels(
-                endpoint=self._endpoint,
-                cache_key_prefix=self._key_prefix,
+                endpoint=endpoint,
+                cache_key_prefix=effective_key_prefix,
             ).inc()
             return (data, "miss (fallback)")
 
@@ -84,15 +88,15 @@ class CacheService:
             cached = await self._redis.get(key)
             if cached is not None:
                 cache_hits_total.labels(
-                    endpoint=self._endpoint,
-                    cache_key_prefix=self._key_prefix,
+                    endpoint=endpoint,
+                    cache_key_prefix=effective_key_prefix,
                 ).inc()
                 return (cached, "hit")
 
             # ── Cache miss: lock + double-check + compute ───────────────
             cache_misses_total.labels(
-                endpoint=self._endpoint,
-                cache_key_prefix=self._key_prefix,
+                endpoint=endpoint,
+                cache_key_prefix=effective_key_prefix,
             ).inc()
 
             lock_key = f"{key}:lock"
@@ -119,8 +123,8 @@ class CacheService:
                     cached = await self._redis.get(key)
                     if cached is not None:
                         cache_hits_total.labels(
-                            endpoint=self._endpoint,
-                            cache_key_prefix=self._key_prefix,
+                            endpoint=endpoint,
+                            cache_key_prefix=effective_key_prefix,
                         ).inc()
                         return (cached, "hit")
 
@@ -137,7 +141,7 @@ class CacheService:
                 key=key,
             )
             cache_errors_total.labels(
-                endpoint=self._endpoint,
+                endpoint=endpoint,
                 operation="get_or_compute",
                 error_type=type(exc).__name__,
             ).inc()
