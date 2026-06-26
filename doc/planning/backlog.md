@@ -111,11 +111,17 @@
 | STORY-51 | Alert within 1 minute when container crashes | story | low | todo | change |
 | STORY-52 | Alert admin when SvelteKit Core Web Vitals degrade | story | low | todo | change |
 
+## Epic 11: Portal Scrapers
+
+| ID | Title | Type | Priority | Status | Labels |
+|----|-------|------|----------|--------|--------|
+| STORY-53 | Otodom Portal Scraper | story | high | in-progress | change, epic |
+
 ---
 
 ## Stats
 
-- **Total items:** 52
+- **Total items:** 53
 - **Todo:** 32
-- **In progress:** 0
+- **In progress:** 1
 - **Done:** 20
