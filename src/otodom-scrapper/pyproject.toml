@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=70.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "otodom-scrapper"
+version = "0.1.0"
+description = "Otodom.pl real estate scraper"
+requires-python = ">=3.12"
+dependencies = [
+    "scrapper-base @ file:///mnt/d/Repozytoria/nieruchomosci-ados/src/scrapper-base",
+    "scrapy>=2.11,<3.0",
+    "scrapy-playwright>=0.0.40,<1.0",
+    "playwright-stealth>=1.0.6,<2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9.0",
+    "pytest-asyncio>=0.24,<1.0",
+    "ruff>=0.5,<1.0",
+    "mypy>=1.10,<2.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["otodom_scrapper*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disable_error_code = [
+    "no-untyped-def",
+    "type-arg",
+    "unused-ignore",
+    "no-any-return",
+    "method-assign",
+    "attr-defined",
+    "comparison-overlap",
+    "assignment",
+    "misc",
+    "no-untyped-call",
+    "abstract",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_test_loop_scope = "function"
+testpaths = ["tests"]
