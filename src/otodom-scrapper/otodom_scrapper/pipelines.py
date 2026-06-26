@@ -6,7 +6,6 @@ Inherits from BasePipeline and implements Otodom-specific item mapping.
 from typing import Any
 
 from scraper_base.pipeline import BasePipeline
-from scraper_base.storage import MAX_PHOTOS_PER_PROPERTY
 
 
 class OtodomPipeline(BasePipeline):
@@ -47,10 +46,20 @@ class OtodomPipeline(BasePipeline):
                 data["price"] = int(float(price_str))
             except (ValueError, TypeError):
                 data["price"] = None
+        elif "price" in data:
+            # Handle empty string, None, etc.
+            data["price"] = None
 
         # Normalize price_per_m2
         if "price_per_m2" in data and data["price_per_m2"]:
-            ppm_str = str(data["price_per_m2"]).replace(" ", "").replace("PLN", "").replace("zł", "").replace("/m²", "").replace("/m2", "")
+            ppm_str = (
+                str(data["price_per_m2"])
+                .replace(" ", "")
+                .replace("PLN", "")
+                .replace("zł", "")
+                .replace("/m²", "")
+                .replace("/m2", "")
+            )
             try:
                 data["price_per_m2"] = int(float(ppm_str))
             except (ValueError, TypeError):
