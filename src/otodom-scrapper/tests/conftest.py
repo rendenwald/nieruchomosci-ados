@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from typing import Any
 
 import pytest
 from scrapy.http import HtmlResponse, Request
 
 from otodom_scrapper.pipelines import OtodomPipeline
+
+FIXTURES_DIR = Path(__file__).resolve().parent / "otodom-search-results"
 
 # ── Sample search results page ───────────────────────────────────────────
 # Contains 3 listing cards and a pagination next-page link.
@@ -124,6 +128,24 @@ def sample_detail_minimal_html() -> str:
 def empty_results_html() -> str:
     """Fixture returning empty search results HTML."""
     return EMPTY_SEARCH_HTML
+
+
+@pytest.fixture
+def search_results_with_photos_html() -> str:
+    """Load the realistic Otodom search results HTML fixture from file.
+
+    This file contains 6 listing cards with photo URLs, prices,
+    locations, and pagination — replicating a real otodom.pl page.
+    """
+    fixture_path = FIXTURES_DIR / "search-results-with-photos.html"
+    if not fixture_path.exists():
+        pytest.fail(
+            f"Fixture file not found: {fixture_path}. "
+            "Download a real otodom.pl search results page and save it "
+            "to src/otodom-scrapper/tests/otodom-search-results/ "
+            "or use the provided default fixture."
+        )
+    return fixture_path.read_text(encoding="utf-8")
 
 
 @pytest.fixture
