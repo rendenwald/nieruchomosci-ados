@@ -18,8 +18,8 @@
 #   prometheus  — Prometheus metrics scraper (port 9090)
 #   alertmanager — Alertmanager alert routing (port 9093)
 #
-# Future additions:
-#   grafana, loki
+# Now added:
+#   grafana
 
 services:
   postgres:
@@ -128,6 +128,30 @@ services:
     networks:
       - realestate-net
 
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: realestate-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
+    volumes:
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--timeout=3", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - realestate-net
+
   real-estate-api:
     build:
       context: .
@@ -164,6 +188,7 @@ volumes:
   minio_data:
   prometheus_data:
   alertmanager_data:
+  grafana_data:
 
 networks:
   realestate-net:

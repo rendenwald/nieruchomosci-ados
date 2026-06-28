@@ -115,13 +115,13 @@
 
 | ID | Title | Type | Priority | Status | Labels |
 |----|-------|------|----------|--------|--------|
-| STORY-53 | Otodom Portal Scraper | story | high | in-progress | change, epic |
+| STORY-53 | Otodom Portal Scraper | story | high | done | change, epic |
 
 ---
 
 ## Stats
 
 - **Total items:** 53
-- **Todo:** 32
-- **In progress:** 1
-- **Done:** 20
+- **Todo:** 31
+- **In progress:** 0
+- **Done:** 22
