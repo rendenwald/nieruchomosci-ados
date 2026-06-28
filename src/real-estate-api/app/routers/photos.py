@@ -176,6 +176,7 @@ async def get_thumbnail(sha256: str, request: Request) -> Response:
 
     client = _get_minio_client(request)
     if client is None:
+        logger.warning("MinIO client unavailable for thumbnail request", sha256=normalized)
         return Response(
             status_code=404,
             content='{"detail": "Thumbnail not found"}',
@@ -193,8 +194,22 @@ async def get_thumbnail(sha256: str, request: Request) -> Response:
         content_length = len(data)
         response.close()
         response.release_conn()
-    except (S3Error, MinioException) as exc:
-        logger.debug("Thumbnail not found", sha256=normalized, error=str(exc))
+    except S3Error as exc:
+        if exc.code == "NoSuchKey":
+            logger.debug("Thumbnail not found in MinIO", sha256=normalized)
+            return Response(
+                status_code=404,
+                content='{"detail": "Thumbnail not found"}',
+                media_type="application/json",
+            )
+        logger.warning("MinIO get_object failed for thumbnail", sha256=normalized, error=str(exc))
+        return Response(
+            status_code=404,
+            content='{"detail": "Thumbnail not found"}',
+            media_type="application/json",
+        )
+    except MinioException as exc:
+        logger.warning("MinIO error serving thumbnail", sha256=normalized, error=str(exc))
         return Response(
             status_code=404,
             content='{"detail": "Thumbnail not found"}',
