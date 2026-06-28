@@ -1,0 +1,12 @@
+# Grafana dashboard provisioning — Scraper dashboards
+# Dashboards are loaded from JSON files in this directory.
+apiVersion: 1
+
+providers:
+  - name: Scrapers
+    folder: Scrapers
+    type: file
+    disableDeletion: true
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
