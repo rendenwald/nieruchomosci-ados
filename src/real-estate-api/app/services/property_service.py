@@ -5,7 +5,7 @@ Integrates with ``scrapper-base`` for the ``Property`` ORM model and
 async database session management.
 """
 
-
+import re
 from typing import Any
 
 import structlog
@@ -151,10 +151,37 @@ async def execute_search(
     return list(result.scalars().all())
 
 
+# Regex to extract SHA256 from MinIO object paths like
+# ``photos/ab/cd/abc123...def.jpg``
+_SHA256_PATH_PATTERN = re.compile(r"/([a-f0-9]{64})\.jpg$")
+
+
+def _minio_path_to_api_url(path: str) -> str | None:
+    """Convert a MinIO object path to a CDN-friendly API URL.
+
+    Given a MinIO path like ``photos/ab/cd/abc123...def.jpg``, extracts
+    the SHA256 hash and returns ``/api/v1/photos/abc123...def.jpg``.
+
+    Args:
+        path: MinIO object path.
+
+    Returns:
+        API URL string, or ``None`` if the path does not match the expected
+        pattern.
+
+    """
+    match = _SHA256_PATH_PATTERN.search(path)
+    if match:
+        return f"/api/v1/photos/{match.group(1)}.jpg"
+    return None
+
+
 def property_to_card(prop: Property) -> PropertyCard:
     """Convert a ``Property`` ORM object to a ``PropertyCard`` schema.
 
     Extracts the first photo URL from the photos dict/list if present.
+    Uses CDN-friendly API URLs (based on MinIO SHA256 paths) when available,
+    falling back to original source URLs.
 
     Args:
         prop: The ``Property`` ORM object.
@@ -167,10 +194,22 @@ def property_to_card(prop: Property) -> PropertyCard:
     photo_urls: list[str] | None = None
     if prop.photos:
         if isinstance(prop.photos, list):
-            photo_urls = [
-                p.get("url", "") if isinstance(p, dict) else str(p)
-                for p in prop.photos[:5]  # Limit to 5 thumbnails
-            ]
+            photo_urls = []
+            for p in prop.photos[:5]:  # Limit to 5 thumbnails
+                if isinstance(p, dict):
+                    # Try MinIO path first (CDN-friendly), fall back to original URL
+                    path = p.get("path")
+                    if path and isinstance(path, str):
+                        api_url = _minio_path_to_api_url(path)
+                        if api_url:
+                            photo_urls.append(api_url)
+                            continue
+                    # Fall back to original URL
+                    url = p.get("url", "")
+                    if isinstance(url, str) and url:
+                        photo_urls.append(url)
+                elif isinstance(p, str):
+                    photo_urls.append(p)
         elif isinstance(prop.photos, dict):
             url = prop.photos.get("url") or prop.photos.get("thumbnail", "")
             if url:

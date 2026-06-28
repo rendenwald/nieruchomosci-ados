@@ -1,0 +1,38 @@
+change_id: STORY-29
+title: "Serve photos via CDN-friendly URL with cache headers"
+phases:
+  clarify_scope:
+    started: "2026-06-28T11:15:00Z"
+    completed: "2026-06-28T11:20:00Z"
+  specification:
+    started: null
+    completed: null
+  test_planning:
+    started: null
+    completed: null
+  delivery_planning:
+    started: null
+    completed: null
+  delivery:
+    started: "2026-06-28T11:20:00Z"
+    completed: "2026-06-28T11:45:00Z"
+  system_spec_update:
+    started: "2026-06-28T11:45:00Z"
+    completed: "2026-06-28T11:45:00Z"
+  review_fix:
+    started: "2026-06-28T11:45:00Z"
+    completed: "2026-06-28T11:45:00Z"
+  quality_gates:
+    started: "2026-06-28T11:45:00Z"
+    completed: "2026-06-28T11:50:00Z"
+  dod_check:
+    started: "2026-06-28T11:50:00Z"
+    completed: "2026-06-28T11:50:00Z"
+  pr_creation:
+    started: null
+    completed: null
+    url: null
+decisions: []
+open_questions: []
+blockers: []
+notes: []

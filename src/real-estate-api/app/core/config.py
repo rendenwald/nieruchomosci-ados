@@ -66,6 +66,13 @@ class Settings(BaseSettings):
     REDIS_STREAM_MAX_RETRIES: int = 3
     REDIS_STREAM_POLL_TIMEOUT: int = 5
 
+    # MinIO / Photo Storage
+    MINIO_ENDPOINT: str = "localhost:9000"
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    MINIO_SECRET_KEY: str = "minioadmin123"
+    MINIO_SECURE: bool = False
+    MINIO_BUCKET_PHOTOS: str = "property-photos"
+
     # Observability
     METRICS_ENABLED: bool = True
 
