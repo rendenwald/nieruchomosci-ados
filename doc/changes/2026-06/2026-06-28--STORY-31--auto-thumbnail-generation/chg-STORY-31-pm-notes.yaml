@@ -39,3 +39,6 @@ notes:
   - text: "Starting STORY-31 after STORY-29 merged (PR #18)"
     type: info
     date: "2026-06-28"
+  - text: "Resuming delivery: branch created, artifacts committed, handing off to @coder for implementation"
+    type: info
+    date: "2026-06-28"
