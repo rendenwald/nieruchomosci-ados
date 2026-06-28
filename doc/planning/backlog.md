@@ -68,7 +68,7 @@
 | STORY-28 | Store scraped photos in MinIO with deduplication | story | high | done | change |
 | STORY-29 | Serve photos via CDN-friendly URL with cache headers | story | medium | done | change |
 | STORY-30 | Validate, resize and store user-uploaded photos in MinIO | story | medium | todo | change |
-| STORY-31 | Generate thumbnail (400x300) automatically on photo store | story | medium | todo | change |
+| STORY-31 | Generate thumbnail (400x300) automatically on photo store | story | medium | done | change |
 | STORY-32 | Cleanup orphaned photos from MinIO on property deletion | story | low | todo | change |
 
 ## Epic 7: Multi-language + Multi-currency
@@ -122,6 +122,6 @@
 ## Stats
 
 - **Total items:** 53
-- **Todo:** 29
+- **Todo:** 28
 - **In progress:** 0
-- **Done:** 24
+- **Done:** 25
