@@ -11,9 +11,10 @@ from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import FastAPI
+from minio import Minio
 
 from app.core.config import get_settings
-from app.routers import cities, health, properties, readiness
+from app.routers import cities, health, photos, properties, readiness
 from app.services.cache_service import CacheService
 from app.services.redis_client import RedisClient
 from app.workers.alert_worker import AlertWorker
@@ -53,6 +54,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
         app.state.redis_client = redis_client
         app.state.cache_service = cache_service
+
+    # Initialise MinIO client for photo serving
+    try:
+        minio_client = Minio(
+            endpoint=settings.MINIO_ENDPOINT,
+            access_key=settings.MINIO_ACCESS_KEY,
+            secret_key=settings.MINIO_SECRET_KEY,
+            secure=settings.MINIO_SECURE,
+        )
+        app.state.minio_client = minio_client
+        app.state.minio_bucket = settings.MINIO_BUCKET_PHOTOS
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("MinIO client creation failed, photo serving unavailable", error=str(exc))
+        app.state.minio_client = None
 
     # Start Alert Worker background consumer
     alert_worker = AlertWorker(redis_client)
@@ -96,6 +111,7 @@ def create_app() -> FastAPI:
 
     # Register routers
     app.include_router(properties.router, prefix=settings.API_PREFIX)
+    app.include_router(photos.router, prefix=settings.API_PREFIX)
     app.include_router(cities.router, prefix=settings.API_PREFIX)
     app.include_router(health.router)
     app.include_router(readiness.router)

@@ -2,11 +2,13 @@
 Shared test fixtures for real-estate-api unit tests.
 
 Provides fakeredis-based fixtures for cache tests, a test FastAPI application
-with overridden dependencies, and async HTTP test client via httpx.
+with overridden dependencies, async HTTP test client via httpx, and mock
+MinIO client for photo serving tests.
 """
 
 import time
 from collections.abc import AsyncGenerator
+from unittest.mock import MagicMock
 
 import fakeredis
 import pytest_asyncio
@@ -74,5 +76,27 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest_asyncio.fixture
+async def app_with_minio(app: FastAPI) -> FastAPI:
+    """Create a test app with a mocked MinIO client.
+
+    Attaches a ``MagicMock`` MinIO client to ``app.state`` so photo endpoint
+    tests can control responses.
+
+    Usage::
+
+        async def test_photo(client, app_with_minio):
+            app_with_minio.state.minio_client.get_object.return_value.read.return_value = b"fake"
+            response = await client.get("/api/v1/photos/abc...jpg")
+
+    Returns:
+        The ``FastAPI`` application with ``minio_client`` attached.
+    """
+    mock_minio = MagicMock()
+    app.state.minio_client = mock_minio
+    app.state.minio_bucket = "property-photos"
+    return app
 
 
