@@ -28,7 +28,7 @@
 | STORY-8 | Increment `scrape_errors_total` with error_type label | story | high | done | change |
 | STORY-9 | Record `scrape_duration_seconds` histogram | story | high | done | change |
 | STORY-10 | Track `db_write_duration_seconds` | story | high | done | change |
-| STORY-11 | Show per-portal dashboard with all metrics in Grafana | story | medium | todo | change |
+| STORY-11 | Show per-portal dashboard with all metrics in Grafana | story | medium | done | change |
 | STORY-12 | Trigger Alertmanager notification when error_rate > 5% | story | medium | done | change |
 
 ## Epic 3: Interactive Map
@@ -66,7 +66,7 @@
 | ID | Title | Type | Priority | Status | Labels |
 |----|-------|------|----------|--------|--------|
 | STORY-28 | Store scraped photos in MinIO with deduplication | story | high | done | change |
-| STORY-29 | Serve photos via CDN-friendly URL with cache headers | story | medium | todo | change |
+| STORY-29 | Serve photos via CDN-friendly URL with cache headers | story | medium | done | change |
 | STORY-30 | Validate, resize and store user-uploaded photos in MinIO | story | medium | todo | change |
 | STORY-31 | Generate thumbnail (400x300) automatically on photo store | story | medium | todo | change |
 | STORY-32 | Cleanup orphaned photos from MinIO on property deletion | story | low | todo | change |
@@ -122,6 +122,6 @@
 ## Stats
 
 - **Total items:** 53
-- **Todo:** 31
+- **Todo:** 29
 - **In progress:** 0
-- **Done:** 22
+- **Done:** 24
