@@ -160,11 +160,16 @@ class BasePipeline(ABC):
                     response.raise_for_status()
                     object_name = await self._minio.upload_photo(response.content)
                     if object_name:
-                        results.append({
+                        # Generate and upload thumbnail (non-blocking on failure)
+                        thumbnail_name = await self._minio.upload_thumbnail(response.content)
+                        photo_entry: dict[str, Any] = {
                             "path": object_name,
                             "url": url,
                             "order": len(results) + 1,
-                        })
+                        }
+                        if thumbnail_name:
+                            photo_entry["thumbnail_path"] = thumbnail_name
+                        results.append(photo_entry)
                         self.logger.debug(
                             "Photo uploaded to MinIO",
                             url=url,

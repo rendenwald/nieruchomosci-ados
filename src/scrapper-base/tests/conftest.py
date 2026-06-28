@@ -222,6 +222,21 @@ class MockMinioClient:
         self._objects[obj_name] = data
         return obj_name
 
+    async def upload_thumbnail(
+        self,
+        data: bytes,
+        object_name: str | None = None,
+        size: tuple[int, int] = (400, 300),
+        quality: int = 85,
+    ) -> str | None:
+        # Derive thumbnail name automatically if not provided
+        if object_name is None:
+            import hashlib  # noqa: PLC0415
+            sha256 = hashlib.sha256(data).hexdigest()
+            object_name = f"photos/{sha256[:2]}/{sha256[2:4]}/{sha256}_thumb.jpg"
+        self._objects[object_name] = data
+        return object_name
+
     async def get_photo_url(
         self,
         object_name: str,

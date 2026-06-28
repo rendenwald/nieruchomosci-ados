@@ -213,15 +213,15 @@ Add tests for the thumbnail endpoint:
 
 ## Execution Order
 
-| Step | Action | File(s) |
-|------|--------|---------|
-| 1 | Add Pillow dependency | `scrapper-base/pyproject.toml` |
-| 2 | Add `upload_thumbnail()` method | `scrapper-base/src/scraper_base/storage.py` |
-| 3 | Modify `_process_photos()` for thumbnails | `scrapper-base/src/scraper_base/pipeline.py` |
-| 4 | Add thumbnail serving endpoint | `real-estate-api/app/routers/photos.py` |
-| 5 | Add scrapper-base tests | `scrapper-base/tests/test_thumbnail_processor.py` |
-| 6 | Add API tests | `real-estate-api/tests/test_photos.py` |
-| 7 | Run full test suite + lint + mypy | Both packages |
+| Step | Action | File(s) | Status |
+|------|--------|---------|--------|
+| 1 | Add Pillow dependency | `scrapper-base/pyproject.toml` | ✅ Done |
+| 2 | Add `upload_thumbnail()` method | `scrapper-base/src/scraper_base/storage.py` | ✅ Done |
+| 3 | Modify `_process_photos()` for thumbnails | `scrapper-base/src/scraper_base/pipeline.py` | ✅ Done |
+| 4 | Add thumbnail serving endpoint | `real-estate-api/app/routers/photos.py` | ✅ Done |
+| 5 | Add scrapper-base tests | `scrapper-base/tests/test_thumbnail_processor.py` | ✅ Done |
+| 6 | Add API tests | `real-estate-api/tests/test_photos.py` | ✅ Done |
+| 7 | Run full test suite + lint + mypy | Both packages | ✅ Done |
 
 ---
 
@@ -231,3 +231,17 @@ Add tests for the thumbnail endpoint:
 cd src/scrapper-base && uv run -- pytest tests/ -v && uv run -- ruff check src/ tests/ && uv run -- mypy src/
 cd src/real-estate-api && uv run -- pytest tests/ -v && uv run -- ruff check app/ tests/ && uv run -- mypy app/
 ```
+
+---
+
+## Execution Log
+
+| Date | Action | Outcome |
+|------|--------|---------|
+| 2026-06-28 | Step 1: Added Pillow>=10.0,<12.0 to scrapper-base/pyproject.toml | Done |
+| 2026-06-28 | Step 2: Added upload_thumbnail() to MinioStorageClient | Done |
+| 2026-06-28 | Step 3: Modified _process_photos() to generate thumbnails | Done |
+| 2026-06-28 | Step 4: Added GET /{sha256}/thumb.jpg endpoint to photos router | Done |
+| 2026-06-28 | Step 5: Created test_thumbnail_processor.py (TN-1 through TN-13 + regression) | Done |
+| 2026-06-28 | Step 6: Added thumbnail endpoint tests (TN-20 through TN-25) | Done |
+| 2026-06-28 | Step 7: ruff check ✅ / mypy ✅ / pytest (109+85=194) ✅ | All passing |
