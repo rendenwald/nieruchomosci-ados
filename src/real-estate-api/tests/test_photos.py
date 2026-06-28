@@ -126,3 +126,104 @@ async def test_get_photo_content_length(client, app_with_minio) -> None:  # type
     response = await client.get(f"/api/v1/photos/{valid_sha256}.jpg")
     assert response.status_code == 200
     assert int(response.headers.get("content-length", "0")) == len(fake_data)
+
+
+# ---------------------------------------------------------------------------
+# Thumbnail endpoint tests (TN-20 through TN-25)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_tn20_get_thumbnail_returns_200(client, app_with_minio) -> None:  # type: ignore[no-untyped-def]
+    """TN-20: GET /api/v1/photos/{sha256}/thumb.jpg returns 200."""
+    valid_sha256 = "ab" + "c" * 62
+    fake_data = b"\xff\xd8\xff\xe0"  # JPEG magic bytes
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = fake_data
+    app_with_minio.state.minio_client.get_object.return_value = mock_response
+
+    response = await client.get(f"/api/v1/photos/{valid_sha256}/thumb.jpg")
+    assert response.status_code == 200
+    assert response.content == fake_data
+
+
+@pytest.mark.asyncio
+async def test_tn21_thumbnail_cache_headers(client, app_with_minio) -> None:  # type: ignore[no-untyped-def]
+    """TN-21: Cache-Control header present on thumbnail response."""
+    valid_sha256 = "ab" + "c" * 62
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = b"fake"
+    app_with_minio.state.minio_client.get_object.return_value = mock_response
+
+    response = await client.get(f"/api/v1/photos/{valid_sha256}/thumb.jpg")
+    assert response.status_code == 200
+    cache_control = response.headers.get("cache-control", "")
+    assert "public" in cache_control
+    assert "max-age=31536000" in cache_control
+    assert "immutable" in cache_control
+
+
+@pytest.mark.asyncio
+async def test_tn22_thumbnail_etag_header(client, app_with_minio) -> None:  # type: ignore[no-untyped-def]
+    """TN-22: ETag header matches {sha256}_thumb pattern."""
+    valid_sha256 = "ab" + "c" * 62
+
+    mock_response = MagicMock()
+    mock_response.read.return_value = b"fake"
+    app_with_minio.state.minio_client.get_object.return_value = mock_response
+
+    response = await client.get(f"/api/v1/photos/{valid_sha256}/thumb.jpg")
+    assert response.status_code == 200
+    etag = response.headers.get("etag", "")
+    assert f'"{valid_sha256}_thumb"' == etag
+
+
+@pytest.mark.asyncio
+async def test_tn23_thumbnail_304_not_modified(client, app_with_minio) -> None:  # type: ignore[no-untyped-def]
+    """TN-23: If-None-Match with matching ETag returns 304."""
+    valid_sha256 = "ab" + "c" * 62
+    etag = f'"{valid_sha256}_thumb"'
+
+    response = await client.get(
+        f"/api/v1/photos/{valid_sha256}/thumb.jpg",
+        headers={"If-None-Match": etag},
+    )
+    assert response.status_code == 304
+    app_with_minio.state.minio_client.get_object.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_tn24_thumbnail_404_not_found(client, app_with_minio) -> None:  # type: ignore[no-untyped-def]
+    """TN-24: Non-existent SHA256 returns 404 for thumbnails."""
+    valid_sha256 = "ab" + "c" * 62
+
+    app_with_minio.state.minio_client.get_object.side_effect = S3Error(
+        code="NoSuchKey",
+        message="Not found",
+        resource=f"photos/{valid_sha256[:2]}/{valid_sha256[2:4]}/{valid_sha256}_thumb.jpg",
+        request_id="test",
+        host_id="test",
+        response=None,
+    )
+
+    response = await client.get(f"/api/v1/photos/{valid_sha256}/thumb.jpg")
+    assert response.status_code == 404
+    assert b"Thumbnail not found" in response.content
+
+
+@pytest.mark.asyncio
+async def test_tn25_thumbnail_422_invalid_hash(client) -> None:  # type: ignore[no-untyped-def]
+    """TN-25: Invalid SHA256 format returns 422 for thumbnails."""
+    # Too short
+    response = await client.get("/api/v1/photos/short/thumb.jpg")
+    assert response.status_code == 422
+
+    # Non-hex characters
+    response = await client.get("/api/v1/photos/" + "z" * 64 + "/thumb.jpg")
+    assert response.status_code == 422
+
+    # 63 chars (too short)
+    response = await client.get("/api/v1/photos/" + "a" * 63 + "/thumb.jpg")
+    assert response.status_code == 422

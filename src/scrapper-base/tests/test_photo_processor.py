@@ -94,7 +94,13 @@ class TestProcessPhotos:
             import hashlib  # noqa: PLC0415
             return f"photos/ab/cd/{hashlib.sha256(data).hexdigest()}.jpg"
 
+        async def _fake_thumbnail(data: bytes, **kwargs: object) -> str | None:  # noqa: ARG001
+            import hashlib  # noqa: PLC0415
+            sha256 = hashlib.sha256(data).hexdigest()
+            return f"photos/{sha256[:2]}/{sha256[2:4]}/{sha256}_thumb.jpg"
+
         mock_minio.upload_photo = AsyncMock(side_effect=_fake_upload)
+        mock_minio.upload_thumbnail = AsyncMock(side_effect=_fake_thumbnail)
         pipeline._minio = mock_minio
         return pipeline
 

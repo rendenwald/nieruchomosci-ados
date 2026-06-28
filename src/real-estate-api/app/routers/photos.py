@@ -134,3 +134,95 @@ async def get_photo(sha256: str, request: Request) -> Response:
             "Accept-Ranges": "bytes",
         },
     )
+
+
+@router.get("/{sha256}/thumb.jpg")
+async def get_thumbnail(sha256: str, request: Request) -> Response:
+    """Serve a photo thumbnail from MinIO with CDN-friendly cache headers.
+
+    Args:
+        sha256: SHA-256 hex digest of the original photo.
+        request: The FastAPI request object (for app state and headers).
+
+    Returns:
+        - ``200`` with the thumbnail binary and cache headers.
+        - ``304`` if ``If-None-Match`` matches.
+        - ``404`` if the thumbnail is not found.
+        - ``422`` if the SHA256 format is invalid.
+
+    """
+    normalized = _validate_sha256(sha256)
+    if not normalized:
+        return Response(
+            status_code=422,
+            content='{"detail": "Invalid SHA256 hash"}',
+            media_type="application/json",
+        )
+
+    # Thumbnail path convention
+    object_path = f"photos/{normalized[:2]}/{normalized[2:4]}/{normalized}_thumb.jpg"
+    etag_value = f'"{normalized}_thumb"'
+
+    # ETag check
+    if_none_match = request.headers.get("if-none-match")
+    if if_none_match == etag_value:
+        return Response(
+            status_code=304,
+            headers={
+                "ETag": etag_value,
+                "Cache-Control": "public, max-age=31536000, immutable",
+            },
+        )
+
+    client = _get_minio_client(request)
+    if client is None:
+        logger.warning("MinIO client unavailable for thumbnail request", sha256=normalized)
+        return Response(
+            status_code=404,
+            content='{"detail": "Thumbnail not found"}',
+            media_type="application/json",
+        )
+
+    bucket = getattr(request.app.state, "minio_bucket", "property-photos")
+    try:
+        response = await asyncio.to_thread(
+            client.get_object,
+            bucket_name=bucket,
+            object_name=object_path,
+        )
+        data = response.read()
+        content_length = len(data)
+        response.close()
+        response.release_conn()
+    except S3Error as exc:
+        if exc.code == "NoSuchKey":
+            logger.debug("Thumbnail not found in MinIO", sha256=normalized)
+            return Response(
+                status_code=404,
+                content='{"detail": "Thumbnail not found"}',
+                media_type="application/json",
+            )
+        logger.warning("MinIO get_object failed for thumbnail", sha256=normalized, error=str(exc))
+        return Response(
+            status_code=404,
+            content='{"detail": "Thumbnail not found"}',
+            media_type="application/json",
+        )
+    except MinioException as exc:
+        logger.warning("MinIO error serving thumbnail", sha256=normalized, error=str(exc))
+        return Response(
+            status_code=404,
+            content='{"detail": "Thumbnail not found"}',
+            media_type="application/json",
+        )
+
+    return Response(
+        content=data,
+        media_type="image/jpeg",
+        headers={
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "ETag": etag_value,
+            "Content-Length": str(content_length),
+            "Accept-Ranges": "bytes",
+        },
+    )

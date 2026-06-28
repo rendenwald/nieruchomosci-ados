@@ -13,6 +13,7 @@ from datetime import timedelta
 
 import structlog
 from minio import Minio
+from PIL import Image
 
 logger = structlog.get_logger(__name__)
 
@@ -164,6 +165,64 @@ class MinioStorageClient:
                 error=str(exc),
             )
             return None
+
+    # ------------------------------------------------------------------
+    # Thumbnail
+    # ------------------------------------------------------------------
+
+    async def upload_thumbnail(
+        self,
+        data: bytes,
+        object_name: str | None = None,
+        size: tuple[int, int] = (400, 300),
+        quality: int = 85,
+    ) -> str | None:
+        """Generate and upload a thumbnail to MinIO.
+
+        Args:
+            data: Original photo bytes.
+            object_name: Target object name. If None, derived from original SHA256.
+            size: Desired thumbnail dimensions (width, height).
+            quality: JPEG quality (1-100).
+
+        Returns:
+            Object name on success, None on failure.
+
+        """
+        if not self._available and self._initialised:
+            logger.warning("MinIO unavailable, skipping thumbnail upload")
+            return None
+
+        try:
+            img = Image.open(io.BytesIO(data))
+            img = img.convert("RGB")  # type: ignore[assignment]  # PIL stubs: Image.open returns ImageFile, convert returns Image
+            img.thumbnail(size, Image.Resampling.LANCZOS)
+
+            # Center-crop to exact dimensions
+            if img.size != size:
+                left = (img.width - size[0]) / 2
+                top = (img.height - size[1]) / 2
+                right = left + size[0]
+                bottom = top + size[1]
+                img = img.crop((left, top, right, bottom))  # type: ignore[assignment]  # Same PIL stub type narrowing
+
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=quality)
+            thumb_bytes = buf.getvalue()
+        except Exception as exc:
+            logger.warning("Thumbnail generation failed", error=str(exc))
+            return None
+
+        # Derive thumbnail object name from original if not provided
+        if object_name is None:
+            sha256 = hashlib.sha256(data).hexdigest()
+            object_name = f"photos/{sha256[:2]}/{sha256[2:4]}/{sha256}_thumb.jpg"
+
+        return await self.upload_photo(
+            thumb_bytes,
+            object_name=object_name,
+            content_type="image/jpeg",
+        )
 
     # ------------------------------------------------------------------
     # Download URL
