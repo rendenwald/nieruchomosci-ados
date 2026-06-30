@@ -12,6 +12,7 @@ dependencies = [
     "scrapy>=2.11,<3.0",
     "scrapy-playwright>=0.0.40,<1.0",
     "playwright-stealth>=1.0.6,<2.0",
+    "setuptools>=70.0,<72.0",
 ]
 
 [project.optional-dependencies]
