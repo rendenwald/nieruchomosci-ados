@@ -8,12 +8,13 @@ MinIO client for photo serving tests.
 
 import time
 from collections.abc import AsyncGenerator
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import fakeredis
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest_asyncio.fixture
@@ -29,24 +30,50 @@ async def fake_redis() -> AsyncGenerator[fakeredis.FakeAsyncRedis, None]:
 
 
 @pytest_asyncio.fixture
-async def app(fake_redis: fakeredis.FakeAsyncRedis) -> FastAPI:
-    """Create a test FastAPI application with fakeredis overrides.
+async def mock_db_session() -> AsyncMock:
+    """Create a mock ``AsyncSession`` for dependency override.
 
-    Overrides the real Redis client with a fakeredis instance so tests
-    do not require a running Redis server.
+    All methods are ``AsyncMock`` so they work with async calls.
+    """
+    session = AsyncMock(spec=AsyncSession)
+    session.execute = AsyncMock()
+    session.add = MagicMock()
+    session.commit = AsyncMock()
+    session.rollback = AsyncMock()
+    return session
+
+
+@pytest_asyncio.fixture
+async def app(
+    fake_redis: fakeredis.FakeAsyncRedis,
+    mock_db_session: AsyncMock,
+) -> FastAPI:
+    """Create a test FastAPI application with fakeredis and DB overrides.
+
+    Overrides the real Redis client with a fakeredis instance and the
+    async database session with a mock so tests do not require running
+    Redis or PostgreSQL servers.
 
     Args:
         fake_redis: The fakeredis fixture.
+        mock_db_session: The mock database session fixture.
 
     Returns:
         A ``FastAPI`` application configured for testing.
     """
     # Import here to avoid module-level side effects
+    from app.database import get_session
     from app.main import create_app
     from app.services.cache_service import CacheService
     from app.services.redis_client import RedisClient
 
     test_app = create_app()
+
+    # Override the get_session dependency with a mock
+    async def _override_session() -> AsyncGenerator[AsyncSession, None]:
+        yield mock_db_session
+
+    test_app.dependency_overrides[get_session] = _override_session
 
     # Override the real RedisClient with the fakeredis-backed one
     redis_client = RedisClient()
