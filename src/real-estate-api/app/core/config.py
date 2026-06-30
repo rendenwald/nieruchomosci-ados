@@ -73,6 +73,11 @@ class Settings(BaseSettings):
     MINIO_SECURE: bool = False
     MINIO_BUCKET_PHOTOS: str = "property-photos"
 
+    # Photo upload limits
+    MAX_UPLOAD_SIZE_BYTES: int = 10_485_760  # 10 MB
+    MAX_UPLOAD_DIMENSION: int = 2048  # max pixels on longest side
+    ALLOWED_UPLOAD_MIME_TYPES: list[str] = ["image/jpeg", "image/png", "image/webp"]
+
     # Observability
     METRICS_ENABLED: bool = True
 

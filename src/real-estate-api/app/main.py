@@ -117,3 +117,6 @@ def create_app() -> FastAPI:
     app.include_router(readiness.router)
 
     return app
+
+
+application = create_app()

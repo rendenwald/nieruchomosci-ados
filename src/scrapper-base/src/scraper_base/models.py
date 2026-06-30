@@ -250,3 +250,35 @@ class ScraperRun(Base):
 
     def __repr__(self) -> str:
         return f"<ScraperRun(id={self.id}, portal={self.portal_source!r}, status={self.status!r})>"
+
+
+# ---------------------------------------------------------------------------
+# PhotoAsset
+# ---------------------------------------------------------------------------
+
+
+class PhotoAsset(Base):
+    """Metadata record for a user-uploaded photo stored in MinIO.
+
+    Each row represents a single photo identified by its SHA-256 hash.
+    Photos are stored in MinIO at ``photos/{sha256[:2]}/{sha256[2:4]}/{sha256}.jpg``
+    with an optional 400×300 thumbnail alongside.
+    """
+
+    __tablename__ = "photo_assets"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    sha256: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
+    original_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    mime_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    def __repr__(self) -> str:
+        return f"<PhotoAsset(id={self.id}, sha256={self.sha256!r}, mime={self.mime_type!r})>"

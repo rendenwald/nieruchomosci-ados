@@ -12,9 +12,19 @@ import asyncio
 import re
 
 import structlog
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
 from minio import Minio
 from minio.error import MinioException, S3Error
+from scraper_base.storage import MinioStorageClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import get_settings
+from app.database import get_session
+from app.services.photo_upload_service import (
+    PhotoUploadError,
+    PhotoValidationError,
+    process_upload,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -226,3 +236,78 @@ async def get_thumbnail(sha256: str, request: Request) -> Response:
             "Accept-Ranges": "bytes",
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Upload — POST /api/v1/photos/upload
+# ---------------------------------------------------------------------------
+
+
+@router.post("/upload", status_code=201)
+async def upload_photo(
+    file: UploadFile = File(...),
+    request: Request = None,  # type: ignore[assignment]
+    db: AsyncSession = Depends(get_session),
+) -> dict[str, str | int]:
+    """Upload a photo.
+
+    Validates file type and size, resizes if needed, stores in MinIO,
+    generates a thumbnail, and records metadata in the database.
+
+    **TODO:** Auth enforcement — currently no authentication/authorisation
+    is performed. This endpoint is open until the auth system is built.
+
+    Args:
+        file: The uploaded file (multipart form data).
+        request: The FastAPI request object (for app state).
+        db: An async DB session from the dependency injector.
+
+    Returns:
+        A 201 response with ``sha256``, ``photo_url``, ``thumbnail_url``,
+        ``width``, ``height``, ``file_size_bytes``, and ``mime_type``.
+
+    Raises:
+        HTTPException 422: If validation fails (bad type, size, or content).
+        HTTPException 503: If MinIO storage is unavailable.
+
+    """
+    settings = get_settings()
+
+    # Validate that uploaded file has content
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty")
+
+    # Create a storage client from settings
+    # NOTE: MinioStorageClient lazily connects on first use.
+    minio_client = MinioStorageClient(
+        endpoint=settings.MINIO_ENDPOINT,
+        access_key=settings.MINIO_ACCESS_KEY,
+        secret_key=settings.MINIO_SECRET_KEY,
+        bucket=settings.MINIO_BUCKET_PHOTOS,
+        secure=settings.MINIO_SECURE,
+    )
+
+    try:
+        result = await process_upload(
+            db=db,
+            minio_client=minio_client,
+            data=data,
+            original_filename=file.filename,
+            content_type=file.content_type or "application/octet-stream",
+            bucket=settings.MINIO_BUCKET_PHOTOS,
+        )
+    except PhotoValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except PhotoUploadError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    return {
+        "sha256": result.sha256,
+        "photo_url": result.photo_url,
+        "thumbnail_url": result.thumbnail_url,
+        "width": result.width,
+        "height": result.height,
+        "file_size_bytes": result.file_size_bytes,
+        "mime_type": result.mime_type,
+    }
