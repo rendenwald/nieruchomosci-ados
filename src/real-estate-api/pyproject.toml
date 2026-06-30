@@ -25,6 +25,7 @@ dependencies = [
     "structlog>=24.0,<25.0",
     "geoalchemy2>=0.15,<1.0",
     "scrapper-base",
+    "python-multipart>=0.0.12,<1.0",
 ]
 
 [tool.uv.sources]

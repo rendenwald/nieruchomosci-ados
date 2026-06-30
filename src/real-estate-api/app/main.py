@@ -119,4 +119,4 @@ def create_app() -> FastAPI:
     return app
 
 
-application = create_app()
+app = create_app()
